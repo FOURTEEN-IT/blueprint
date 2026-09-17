@@ -19,6 +19,7 @@ Siehe [`docs/module-katalog.md`](docs/module-katalog.md) für die
 - `persistence-postgres-flyway` — Postgres über Flyway, ohne Spring Data
 - `deployment-fly-cloudflare` — Fly.io-Hosting, GitHub Actions, Cloudflare optional
 - `quality-gates` — Mutationstests, JGiven-Report
+- `dependabot-maintenance` — Dependabot, CodeQL, OpenRewrite, tägliche PR-Routine
 
 ## Verwendung mit Claude Code
 

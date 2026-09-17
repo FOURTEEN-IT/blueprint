@@ -32,6 +32,10 @@ Repository/Verzeichnis.
      nicht zu jedem Projekt passt (siehe README des Moduls).
    - `quality-gates` — nur sinnvoll mit `backend-java-onion`; empfehlen,
      aber nicht erzwingen.
+   - `dependabot-maintenance` — nur wenn das Projekt auf GitHub liegt und
+     eine Claude-Code-Routine einrichten kann/soll (die eigentliche
+     Merge-Routine läuft außerhalb des Repos, siehe README des Moduls);
+     empfehlen, aber nicht erzwingen.
 
    Ausgewählte Module gegen die Abhängigkeitsspalte in
    `docs/module-katalog.md` prüfen (z. B. `frontend-react-vite` ohne
@@ -51,7 +55,8 @@ Repository/Verzeichnis.
 3. **Reihenfolge einhalten** (siehe `docs/module-katalog.md`, Abschnitt
    „Empfohlene Reihenfolge"): `backend-java-onion` zuerst, `quality-gates`
    direkt danach, dann `frontend-react-vite`/`persistence-postgres-flyway`
-   in beliebiger Reihenfolge, `deployment-fly-cloudflare` zuletzt.
+   in beliebiger Reihenfolge, `deployment-fly-cloudflare` danach,
+   `dependabot-maintenance` ganz zuletzt.
 
 4. **Je Modul einspielen:**
    - `template/` bzw. `src-template/`-Inhalte in die entsprechende Stelle
@@ -80,6 +85,13 @@ Repository/Verzeichnis.
    - `quality-gates`: referenziert Test-Tasks aus `backend-java-onion` —
      ohne dieses Modul lässt sich `quality-gates` nicht sinnvoll einspielen
      (Abbruch mit Hinweis, falls der Nutzer es trotzdem will).
+   - `dependabot-maintenance`: Die Datei `docs/dependabot-routine.md` lässt
+     sich einspielen und mit Platzhaltern befüllen wie jede andere Datei —
+     die Routine selbst (der eigentliche „regelmäßige Blick auf offene
+     PRs") entsteht dadurch aber noch nicht. Das ist ein manueller Schritt
+     über die Claude-Code-Weboberfläche, den dieser Skill nicht automatisch
+     auslösen kann; im Ergebnis-Hinweis (Schritt 7) explizit darauf
+     hinweisen.
 
 6. **Nach dem Einspielen: einmal bauen lassen.** Mindestens
    `./gradlew compileJava` (bzw. den entsprechenden Schnellcheck, falls

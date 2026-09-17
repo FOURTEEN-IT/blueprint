@@ -11,6 +11,7 @@ abhängt, und in welcher Reihenfolge Module sinnvoll eingespielt werden.
 | [`persistence-postgres-flyway`](../modules/persistence-postgres-flyway/README.md) | Postgres über Flyway-Migrationen, JdbcTemplate-Repository-Muster (kein Spring Data), Testcontainers-Pflicht, optionale Aktivierung über eine Property | `backend-java-onion` |
 | [`deployment-fly-cloudflare`](../modules/deployment-fly-cloudflare/README.md) | Fly.io-Hosting (eine Instanz), Dockerfile, GitHub-Actions-CI/CD, Semantic Release, optionale Cloudflare-Vorlage (DNS/Proxy) | — (unabhängig, aber sinnvoll erst mit einem fertig bauenden Projekt) |
 | [`quality-gates`](../modules/quality-gates/README.md) | Mutationstests (Pitest) auf kritischen Klassen, ein JGiven-Report über alle Testebenen | `backend-java-onion` (hängt Gates an dessen Test-Tasks) |
+| [`dependabot-maintenance`](../modules/dependabot-maintenance/README.md) | Dependabot-Konfiguration, CodeQL, OpenRewrite für Major-Sprünge, die tägliche Routine, die offene Dependabot-PRs sichtet und mergt | `backend-java-onion` (praktisch), optional `frontend-react-vite`/`quality-gates`/`deployment-fly-cloudflare` |
 
 ## Empfohlene Reihenfolge beim Einspielen
 
@@ -25,6 +26,9 @@ abhängt, und in welcher Reihenfolge Module sinnvoll eingespielt werden.
 4. **`deployment-fly-cloudflare`** zuletzt, wenn ein Projekt lokal baut und
    testet — Deployment vor einem laufenden Build zu verdrahten bringt
    nichts.
+5. **`dependabot-maintenance`** ganz am Ende — die Routine setzt einen
+   funktionierenden, gebauten Build voraus, gegen den sie später Merges
+   prüfen kann.
 
 ## Was dieser Katalog nicht ist
 

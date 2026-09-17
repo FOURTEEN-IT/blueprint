@@ -1,0 +1,60 @@
+name: CodeQL
+
+# Unabhaengig vom normalen Build-Workflow: CodeQL braucht Bytecode/Quelltext,
+# keinen gruenen Testlauf, und soll auch dann laufen, wenn der Build aus
+# anderen Gruenden rot ist. Der woechentliche Cron findet neue Advisories
+# auch fuer unveraenderten Code, nicht nur bei einem Push.
+on:
+  push:
+    branches: [{{MAIN_BRANCH}}]
+  pull_request:
+    branches: [{{MAIN_BRANCH}}]
+  schedule:
+    - cron: "{{CODEQL_CRON}}"
+
+jobs:
+  analyze:
+    name: Analyse (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Nur mit Modul backend-java-onion -- sonst diesen Eintrag
+          # entfernen (build-mode "manual" braucht einen Compile-Schritt).
+          - language: java-kotlin
+            build-mode: manual
+          # Nur mit Modul frontend-react-vite -- sonst diesen Eintrag
+          # entfernen. build-mode "none": CodeQL analysiert JS/TS ohne
+          # eigenen Build-Schritt.
+          - language: javascript-typescript
+            build-mode: none
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - if: matrix.language == 'java-kotlin'
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "{{JAVA_VERSION}}"
+
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+      # Nur kompilieren, nicht den vollen Gate-Lauf: CodeQL analysiert
+      # Bytecode, ein gruener Testlauf (Mutationstests, Architekturtests)
+      # traegt dazu nichts bei und wuerde den Workflow unnoetig verlangsamen.
+      - if: matrix.build-mode == 'manual'
+        run: ./gradlew compileJava compileTestJava {{SKIP_FRONTEND_GRADLE_FLAG}}
+
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ matrix.language }}"
