@@ -1,5 +1,5 @@
-// Modul quality-gates -- Mutationstests, JGiven-Report ueber alle Ebenen,
-// Ausnahmenregister, alles verbindlich an `check` gehaengt.
+// Modul quality-gates -- Mutationstests und JGiven-Report ueber alle
+// Ebenen, verbindlich an `check` gehaengt.
 //
 // Herkunft: aus Watchparty (build.gradle.kts) uebernommen und von
 // Fachbegriffen (Kritikalitaetsstufen, Klassennamen, Anforderungsdokument-
@@ -15,8 +15,6 @@
 //   {{PITEST_MUTATION_THRESHOLD}} Mindest-Mutation-Score in Prozent (0-100),
 //                                 am echten Projekt kalibriert -- keine
 //                                 Empfehlung dieses Moduls
-//   {{ANWENDUNGSPFADE}}           steht NICHT hier, sondern in
-//                                 ci-template/commit-format-pruefen.sh
 
 import com.tngtech.jgiven.gradle.JGivenTaskExtension
 import com.tngtech.jgiven.gradle.JGivenReportTask
@@ -146,14 +144,6 @@ configure<PitestPluginExtension> {
     mutationThreshold.set({{PITEST_MUTATION_THRESHOLD}})
     outputFormats.set(setOf("HTML", "XML"))
     timestampedReports.set(false)
-    // Ausnahmenregister (siehe Task ausnahmenregister unten): das eingebaute
-    // FANN-Plugin (an, per Default schon auf Generated/DoNotMutate/
-    // CoverageIgnore) schliesst annotierte Klassen/Methoden von der Mutation
-    // aus -- die eigene Annotation ergaenzt die drei Standardnamen, statt sie
-    // zu ersetzen (ein konfigurierter Wert ueberschreibt sonst die
-    // eingebaute Liste komplett).
-    features.set(listOf(
-            "+FANN(annotation[Generated]annotation[DoNotMutate]annotation[CoverageIgnore]annotation[EquivalentMutant])"))
 }
 
 // Der Schwellwert oben gilt erst dann fuer jeden Build, wenn `check` davon
@@ -161,134 +151,4 @@ configure<PitestPluginExtension> {
 // CI-Lauf wirksam. Genau das ist die Kernaussage dieses Moduls.
 tasks.named("check") {
     dependsOn("pitest")
-}
-
-// --- Ausnahmenregister ------------------------------------------------------
-//
-// Optionales, aber generalisierbares Muster (siehe README): jede bewusste
-// Unterdrueckung einer Pruefung im Code -- hier: @EquivalentMutant gegen
-// einen Pitest-Mutanten, @Disabled gegen einen JUnit-Test -- muss in einem
-// versionierten Register mit Begruendung und Datum stehen, und umgekehrt
-// darf das Register keine Karteileichen enthalten. Ein Gate gleicht beide
-// Seiten per Reflection ab.
-//
-// Ein Projekt, das dieses Muster nicht will, entfernt einfach diesen Task
-// und die zugehoerige dependsOn-Zeile unten -- es ist bewusst als
-// eigenstaendiger Block gehalten, nicht mit dem Pitest-Block oben verwoben.
-tasks.register("ausnahmenregister") {
-    group = "verification"
-    description = "Prueft, dass jede @EquivalentMutant- und @Disabled-Unterdrueckung in docs/test-ausnahmen.md steht."
-    dependsOn(tasks.named("classes"), tasks.named("testClasses"))
-
-    val registerFile = layout.projectDirectory.file("docs/test-ausnahmen.md")
-    val mainClasses = sourceSets.getByName("main").output.classesDirs
-    val testClassesDirs = sourceSets.getByName("test").output.classesDirs
-    val classpath = sourceSets.getByName("test").runtimeClasspath
-    val reportFile = layout.buildDirectory.file("reports/ausnahmenregister.txt")
-
-    inputs.file(registerFile)
-    inputs.files(mainClasses)
-    inputs.files(testClassesDirs)
-    outputs.file(reportFile)
-
-    doLast {
-        val urls = classpath.files.map { it.toURI().toURL() }.toTypedArray()
-        val classLoader = URLClassLoader(urls, javaClass.classLoader)
-
-        fun annotationClassOrNull(name: String): Class<out Annotation>? {
-            @Suppress("UNCHECKED_CAST")
-            return try {
-                classLoader.loadClass(name) as Class<out Annotation>
-            } catch (e: Throwable) {
-                null
-            }
-        }
-
-        // {{PACKAGE_BASE}}.mutationtest.EquivalentMutant ist Projektsache,
-        // analog zu Watchpartys AequivalenterMutant -- eine eigene, leichte
-        // Annotation, kein Bestandteil dieses Moduls.
-        val equivalentMutant = annotationClassOrNull("{{PACKAGE_BASE}}.mutationtest.EquivalentMutant")
-        val disabled = annotationClassOrNull("org.junit.jupiter.api.Disabled")
-
-        fun collect(dirs: FileCollection, annotation: Class<out Annotation>?): Set<String> {
-            if (annotation == null) return emptySet()
-            val found = sortedSetOf<String>()
-            dirs.forEach { rootDir ->
-                rootDir.walkTopDown()
-                    .filter { it.isFile && it.extension == "class" }
-                    .forEach { classFile ->
-                        val className = classFile.relativeTo(rootDir).path
-                            .removeSuffix(".class").replace(File.separatorChar, '.')
-                        val klass = try {
-                            classLoader.loadClass(className)
-                        } catch (e: Throwable) {
-                            return@forEach
-                        }
-                        val simpleName = klass.simpleName
-                        if (klass.getAnnotation(annotation) != null) {
-                            found += simpleName
-                        }
-                        for (method in klass.declaredMethods) {
-                            if (method.getAnnotation(annotation) != null) {
-                                found += "$simpleName.${method.name}"
-                            }
-                        }
-                    }
-            }
-            return found
-        }
-
-        val suppressions = collect(mainClasses, equivalentMutant) + collect(testClassesDirs, disabled)
-
-        // Erste Spalte jeder Tabellenzeile, ohne Backticks und ohne
-        // Platzhalterzeilen.
-        val entries = sortedSetOf<String>()
-        registerFile.asFile.forEachLine { line ->
-            val trimmed = line.trim()
-            if (!trimmed.startsWith("|")) return@forEachLine
-            val firstColumn = trimmed.trim('|').split("|").firstOrNull()?.trim()?.trim('`') ?: return@forEachLine
-            if (firstColumn.isEmpty()) return@forEachLine
-            if (firstColumn.startsWith("---")) return@forEachLine
-            if (firstColumn == "Klasse/Methode" || firstColumn == "Test") return@forEachLine
-            if (firstColumn.startsWith("_(")) return@forEachLine
-            entries += firstColumn
-        }
-
-        val missingEntry = (suppressions - entries).sorted()
-        val missingSuppression = (entries - suppressions).sorted()
-
-        val report = buildString {
-            appendLine("Ausnahmenregister: ${suppressions.size} Unterdrueckung(en) im Code, ${entries.size} Eintrag/Eintraege in docs/test-ausnahmen.md.")
-            if (missingEntry.isEmpty() && missingSuppression.isEmpty()) {
-                appendLine("Code und Register stimmen ueberein.")
-            }
-            if (missingEntry.isNotEmpty()) {
-                appendLine("Ohne Eintrag im Register (${missingEntry.size}):")
-                missingEntry.forEach { appendLine("  - $it") }
-            }
-            if (missingSuppression.isNotEmpty()) {
-                appendLine("Eintrag ohne Entsprechung im Code (${missingSuppression.size}):")
-                missingSuppression.forEach { appendLine("  - $it") }
-            }
-        }
-        println(report)
-        val file = reportFile.get().asFile
-        file.parentFile.mkdirs()
-        file.writeText(report)
-
-        if (missingEntry.isNotEmpty()) {
-            throw GradleException(
-                "Unterdrueckung ohne Eintrag in docs/test-ausnahmen.md: ${missingEntry.joinToString(", ")} " +
-                    "-- jede Ausnahme wird dort mit Begruendung und Datum benannt.")
-        }
-        if (missingSuppression.isNotEmpty()) {
-            throw GradleException(
-                "Karteileiche in docs/test-ausnahmen.md: ${missingSuppression.joinToString(", ")} " +
-                    "-- im Code gibt es dazu keine Unterdrueckung mehr, der Eintrag gehoert entfernt.")
-        }
-    }
-}
-
-tasks.named("check") {
-    dependsOn("ausnahmenregister")
 }

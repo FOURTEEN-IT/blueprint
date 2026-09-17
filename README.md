@@ -18,7 +18,7 @@ Siehe [`docs/module-katalog.md`](docs/module-katalog.md) für die
 - `frontend-react-vite` — React/Vite, Build ins Backend-Jar eingebettet
 - `persistence-postgres-flyway` — Postgres über Flyway, ohne Spring Data
 - `deployment-fly-cloudflare` — Fly.io-Hosting, GitHub Actions, Cloudflare optional
-- `quality-gates` — Mutationstests, JGiven-Report, commit-msg-Hook
+- `quality-gates` — Mutationstests, JGiven-Report
 
 ## Verwendung mit Claude Code
 

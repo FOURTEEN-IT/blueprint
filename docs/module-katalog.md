@@ -10,7 +10,7 @@ abhängt, und in welcher Reihenfolge Module sinnvoll eingespielt werden.
 | [`frontend-react-vite`](../modules/frontend-react-vite/README.md) | React/Vite-Frontend, Build ins Backend-Jar eingebettet, Vitest-Testebene | `backend-java-onion` |
 | [`persistence-postgres-flyway`](../modules/persistence-postgres-flyway/README.md) | Postgres über Flyway-Migrationen, JdbcTemplate-Repository-Muster (kein Spring Data), Testcontainers-Pflicht, optionale Aktivierung über eine Property | `backend-java-onion` |
 | [`deployment-fly-cloudflare`](../modules/deployment-fly-cloudflare/README.md) | Fly.io-Hosting (eine Instanz), Dockerfile, GitHub-Actions-CI/CD, Semantic Release, optionale Cloudflare-Vorlage (DNS/Proxy) | — (unabhängig, aber sinnvoll erst mit einem fertig bauenden Projekt) |
-| [`quality-gates`](../modules/quality-gates/README.md) | Mutationstests (Pitest) auf kritischen Klassen, ein JGiven-Report über alle Testebenen, `commit-msg`-Hook gegen Conventional Commits, optionales Ausnahmenregister | `backend-java-onion` (hängt Gates an dessen Test-Tasks) |
+| [`quality-gates`](../modules/quality-gates/README.md) | Mutationstests (Pitest) auf kritischen Klassen, ein JGiven-Report über alle Testebenen | `backend-java-onion` (hängt Gates an dessen Test-Tasks) |
 
 ## Empfohlene Reihenfolge beim Einspielen
 
