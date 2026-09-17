@@ -60,4 +60,4 @@ frontend-markierte Anforderungs-IDs gegen `requirement(...)`-Aufrufe ab)
 ist nicht Teil dieses Moduls, weil es ein eigenes, projektspezifisches
 Anforderungsdokument mit fester Tabellenform voraussetzt. Siehe
 `docs/frontend-testebene.md` und `build.gradle.fragment.kts` fuer die
-Begruendung und einen Verweis auf die Vorlage in Watchparty.
+Begruendung und einen Verweis auf die Vorlage in der Referenzimplementierung.

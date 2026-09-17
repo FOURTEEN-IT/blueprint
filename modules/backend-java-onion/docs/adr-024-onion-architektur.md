@@ -3,7 +3,7 @@
 **Status:** Vorlage — im Zielprojekt mit eigener Nummer und ggf. angepasster
 Begründung übernehmen.
 
-**Referenzimplementierung:** Watchparty-Projekt, ADR-024.
+**Referenzimplementierung:** Ursprungsprojekt, ADR-024.
 
 **Kontext:** Ohne eine erzwungene Abhängigkeitsrichtung wandert Framework-
 Code (Spring, ein HTTP-Client, ein Nachrichten-Objekt mit Jackson-

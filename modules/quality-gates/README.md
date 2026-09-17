@@ -1,11 +1,11 @@
 # quality-gates
 
-Liefert das, was aus der Referenzimplementierung (Watchparty) heraus den
+Liefert das, was aus der Referenzimplementierung heraus den
 Unterschied zwischen einer Konvention und einem Gate macht: Mutationstests
 (Pitest) auf gezielt ausgewählten, kritischen Klassen, und ein einziger
 JGiven-Report über alle Test-Ebenen hinweg.
 
-Kernaussage, wörtlich aus Watchparty übernommen (`CLAUDE.md`):
+Kernaussage, wörtlich aus der Referenzimplementierung übernommen (`CLAUDE.md`):
 
 > Ein übersprungener Skill ist kein Beinbruch, ein übersprungenes Gate gibt
 > es nicht.
@@ -23,7 +23,7 @@ Existenz eine erzwungene Eigenschaft des Builds macht.
 | Datei/Ordner | Zweck |
 |---|---|
 | `build.gradle.fragment.kts` | Pitest-Plugin + Konfiguration (Zielklassen über eine Kritikalitäts-Annotation, siehe unten), JGiven-Report-Wiring über mehrere Test-Tasks. Beides hängt explizit an `check`. |
-| `docs/gates-uebersicht.md` | Tabelle: welches Gate prüft was, greift immer, Referenz auf Watchparty als Beispiel. |
+| `docs/gates-uebersicht.md` | Tabelle: welches Gate prüft was, greift immer, Referenz auf die Referenzimplementierung als Beispiel. |
 
 ## Abhängigkeit zu anderen Modulen
 
@@ -38,11 +38,12 @@ Existenz eine erzwungene Eigenschaft des Builds macht.
 
 ## Mutationstests: Zielklassenauswahl
 
-Watchparty leitet die Pitest-Zielklassen aus einer selbst geschriebenen
-`@Criticality(HIGH)`-Annotation ab (Reflection über die kompilierten
-Klassen, keine Textsuche, keine zweite handgepflegte Liste, die still
-veraltet). Dieses Modul generalisiert das Prinzip, ohne Watchpartys eigene
-Kritikalitätsstufen (LOW/MEDIUM/HIGH) oder Klassennamen zu übernehmen:
+Die Referenzimplementierung leitet die Pitest-Zielklassen aus einer selbst
+geschriebenen `@Criticality(HIGH)`-Annotation ab (Reflection über die
+kompilierten Klassen, keine Textsuche, keine zweite handgepflegte Liste,
+die still veraltet). Dieses Modul generalisiert das Prinzip, ohne die
+dortigen Kritikalitätsstufen (LOW/MEDIUM/HIGH) oder Klassennamen zu
+übernehmen:
 
 - `build.gradle.fragment.kts` erwartet eine Annotation
   `{{PACKAGE_BASE}}.criticality.Critical` (Platzhalter, siehe unten) mit
@@ -51,15 +52,15 @@ Kritikalitätsstufen (LOW/MEDIUM/HIGH) oder Klassennamen zu übernehmen:
   `HIGH`) per Reflection aus den kompilierten `main`-Klassen ein.
 - Eine leere Zielmenge bricht den Build ab (`GradleException`) statt still
   einen wirkungslosen Pitest-Lauf zuzulassen — derselbe Fehlermodus, den
-  Watchparty an dieser Stelle ausdrücklich vermeidet (Kommentar im
-  Referenz-`build.gradle.kts`, Abschnitt „Mutationstests auf den
-  HIGH-Klassen").
+  die Referenzimplementierung an dieser Stelle ausdrücklich vermeidet
+  (Kommentar im Referenz-`build.gradle.kts`, Abschnitt „Mutationstests auf
+  den HIGH-Klassen").
 - `includedGroups` filtert auf die Tags `unit`/`port` (aus
   `backend-java-onion`) — kein Spring, kein Socket, kein Reportschreiben
   während der Mutation, sonst wird der Lauf unbenutzbar.
 
-**Offene Anmerkung:** Die konkrete Zahl der Kritikalitätsstufen (Watchparty:
-LOW/MEDIUM/HIGH) und der Schwellwert (Watchparty: 99 % mutationThreshold)
+**Offene Anmerkung:** Die konkrete Zahl der Kritikalitätsstufen (Beispielwert:
+LOW/MEDIUM/HIGH) und der Schwellwert (Beispielwert: 99 % mutationThreshold)
 sind Projektentscheidungen, keine generalisierbare Vorgabe dieses Moduls —
 `build.gradle.fragment.kts` markiert beides als Platzhalter
 (`{{PITEST_MUTATION_THRESHOLD}}`), setzt aber keinen Default vor, der wie
@@ -67,7 +68,7 @@ eine Empfehlung aussehen könnte, ohne am echten Projekt kalibriert zu sein.
 
 ## JGiven-Report über alle Ebenen
 
-Wie in Watchparty: Jeder der aus `backend-java-onion` übernommenen
+Wie in der Referenzimplementierung: Jeder der aus `backend-java-onion` übernommenen
 Test-Tasks (`test`, `adapterTest`, `apiTest`) bekommt denselben
 `resultsDir` für sein JGiven-`JGivenTaskExtension`, und ein einziger
 `jgivenTestReport`-Task liest von dort — ein Report mit allen Szenarien
@@ -88,9 +89,10 @@ Platzhalter (`{{...}}`):
 ## Nicht Teil dieses Moduls
 
 - **`commit-msg`-Hook, Ausnahmenregister, Protokollvertrag/Vertragstest,
-  Feature-Dokument-Pflichtformat** — diese Muster existieren in Watchparty,
-  sind hier aber bewusst nicht aufgenommen (an anderer Stelle bereits
-  vorhanden). Wer sie braucht, orientiert sich am Original in Watchparty
+  Feature-Dokument-Pflichtformat** — diese Muster existieren in der
+  Referenzimplementierung, sind hier aber bewusst nicht aufgenommen (an
+  anderer Stelle bereits vorhanden). Wer sie braucht, orientiert sich am
+  Original in der Referenzimplementierung
   (`.githooks/commit-msg`, `ci/commit-format-pruefen.sh`,
   `ausnahmenregister`-Task, `protokollvertrag`/`protokollvertragLiga`,
   `featuredoku`).
@@ -98,15 +100,15 @@ Platzhalter (`{{...}}`):
 ## Offene Anmerkungen
 
 - `abdeckung` (Feature-Abdeckung gegen ein Anforderungsregister) und
-  `abdeckungFrontend` (dieselbe Messung fürs Frontend) sind in Watchparty
-  ebenfalls nicht überspringbare Gates, hängen aber an einem bestimmten
+  `abdeckungFrontend` (dieselbe Messung fürs Frontend) sind in der
+  Referenzimplementierung ebenfalls nicht überspringbare Gates, hängen aber an einem bestimmten
   Anforderungsdokument-Format (`docs/anforderungen.md`, Anhang A) bzw. an
   `frontend-react-vite`. `abdeckungFrontend` ist laut Aufgabenstellung
   Bestandteil von `frontend-react-vite`; `abdeckung` (Backend-Fassung) ist
   keinem der drei Module hier eindeutig zugeordnet — dieses Modul
   übernimmt es nicht, um keine Überschneidung zu riskieren. Das ist eine
   bewusste Lücke, keine übersehene.
-- Die Ebenen-Disjunktheit (`ebenenDisjunktheit` in Watchparty: kein
+- Die Ebenen-Disjunktheit (`ebenenDisjunktheit` in der Referenzimplementierung: kein
   Adapter-/API-Test darf eine Domänenzeile abdecken, die kein
   unit-/port-Test selbst erreicht) hängt an den JaCoCo-Reports der
   Onion-Test-Ebenen aus `backend-java-onion` und gehört inhaltlich eher

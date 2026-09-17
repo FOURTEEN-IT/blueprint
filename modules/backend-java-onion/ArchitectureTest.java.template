@@ -38,7 +38,7 @@ import static com.tngtech.archunit.library.Architectures.onionArchitecture;
  * zaehlen auch Rueckgabetypen, Feldtypen und Annotationen, nicht nur die
  * Importzeile.
  *
- * Referenzimplementierung: Watchparty-Projekt,
+ * Referenzimplementierung:
  * {@code src/test/java/.../ArchitectureTest.java} — dort mit den echten
  * Fachringen (ws/http/file/db/mail/feed/ratelimit) und einer gewachsenen
  * Liste an Invarianten-spezifischen Regeln (Nebenlaeufigkeit, blockierende

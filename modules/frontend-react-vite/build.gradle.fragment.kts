@@ -1,6 +1,6 @@
 // Modul frontend-react-vite -- Gradle<->npm-Verdrahtung.
 //
-// Herkunft: eins zu eins aus Watchparty (build.gradle.kts) uebernommen und
+// Herkunft: eins zu eins aus der Referenzimplementierung (build.gradle.kts) uebernommen und
 // von Fachbegriffen befreit. Vor dem Einspielen in ein Zielprojekt:
 //   - {{PROJECT_NAME}} durch den tatsaechlichen Projektnamen ersetzen
 //   - Pruefen, ob "processResources" der richtige Anknuepfungspunkt ist
@@ -73,7 +73,7 @@ tasks.named("check") {
 
 // --- Abdeckungs-Gate (optional, projektspezifisch) ------------------------
 //
-// In Watchparty gibt es zusaetzlich einen Task `abdeckungFrontend`, der
+// In der Referenzimplementierung gibt es zusaetzlich einen Task `abdeckungFrontend`, der
 // jede mit der Marke "frontend" versehene Anforderungs-ID aus einem
 // Anforderungsdokument gegen die requirement(...)-Aufrufe in frontend/tests
 // (und einer moeglichen E2E-Ebene) abgleicht -- Regeln ohne Szenario und
@@ -84,6 +84,6 @@ tasks.named("check") {
 // Ob und wie ein Zielprojekt das nachbaut, ist eine offene Erweiterung
 // dieses Moduls -- hier absichtlich nicht erfunden, weil die Form des
 // Anforderungsdokuments je nach Projekt unterschiedlich sein kann. Wer es
-// nachbauen will: Watchparty build.gradle.kts, Task `abdeckungFrontend`
+// nachbauen will: build.gradle.kts der Referenzimplementierung, Task `abdeckungFrontend`
 // (sucht `## Anhang A`, parst eine Markdown-Tabelle, gleicht sie mit
 // `requirement\(...\)`-Aufrufen ab) als Vorlage nehmen.

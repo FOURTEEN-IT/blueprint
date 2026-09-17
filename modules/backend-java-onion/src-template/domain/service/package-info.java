@@ -1,6 +1,6 @@
 /**
  * Domain Services: reine Funktionen, die zu keiner einzelnen Entity
- * gehoeren (Referenzbeispiel: {@code Settlement} im Watchparty-Projekt).
+ * gehoeren (Referenzbeispiel: {@code Settlement} in der Referenzimplementierung).
  * {@code @Service}-Typen sind zustandslos —
  * {@code ArchitectureTest.domainServicesSindZustandslos} prueft das.
  */

@@ -32,7 +32,7 @@ dieses Moduls.
 
 ## Beispielimplementierung
 
-Watchparty (`frontend/tests/`) zeigt eine ausgebaute Fassung: ein
+Die Referenzimplementierung (`frontend/tests/`) zeigt eine ausgebaute Fassung: ein
 `setup.js` mit projektspezifischen Grundannahmen je Test, eine geteilte
 Zustandsform (`zustand.js`) fuer wiederkehrende Serverdaten in Tests, sowie
 den Abdeckungs-Task `abdeckungFrontend` in `build.gradle.kts`, der Anhang A

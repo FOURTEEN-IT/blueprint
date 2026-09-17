@@ -56,4 +56,4 @@ dann reproduzierbar und nachlesbar, nicht interpretiert.
   neuen Major, ist das Handarbeit — für das eigene Werkzeug gibt es kein
   Rezept.
 
-*Referenzimplementierung: Watchparty-Projekt, ADR-042.*
+*Referenzimplementierung: Ursprungsprojekt, ADR-042.*

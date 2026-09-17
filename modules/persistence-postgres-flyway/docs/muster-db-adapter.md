@@ -1,7 +1,7 @@
 # Muster: DB-Adapter über JdbcTemplate + Flyway
 
-Referenzimplementierung: Watchparty, Tippspiel-Persistenz (ADR-035),
-`adapter/out/db/`, `config/league/LeagueDatabaseConfig.java`,
+Referenzimplementierung: Tippspiel-Persistenz (ADR-035),
+`adapter/out/db/`, `config/league/ExampleDatabaseConfig.java`,
 `src/main/resources/db/league/migration/`.
 
 ## Warum JdbcTemplate statt Spring Data
@@ -28,7 +28,8 @@ Autoconfiguration ab und verdrahtet DataSource, Flyway-Migration und
 `NamedParameterJdbcTemplate` in einer eigenen `@Configuration`-Klasse von
 Hand, mit `@ConditionalOnProperty` auf einer einzigen Property als
 Schalter — derselbe Stil wie die übrigen, ebenfalls von Hand verdrahteten
-Beans des Zielprojekts (z. B. `RoomConfig`/`SnapshotConfig` in Watchparty).
+Beans des Zielprojekts (z. B. `RoomConfig`/`SnapshotConfig` in der
+Referenzimplementierung).
 
 ## Warum Testcontainers Pflicht ist
 
@@ -53,6 +54,6 @@ neu zu starten.
 Wie ein Zielprojekt mit mehreren, voneinander unabhängigen
 Datenbank-nutzenden Fachbereichen umgehen soll (mehrere
 `{{DB_SCHEMA_LABEL}}`-Migrationsverzeichnisse, mehrere Container in
-Tests?), ist hier nicht entschieden — Watchparty hat bislang nur einen
-solchen Fachbereich (das Tippspiel), das Muster ist daher nur für den
+Tests?), ist hier nicht entschieden — die Referenzimplementierung hat
+bislang nur einen solchen Fachbereich (das Tippspiel), das Muster ist daher nur für den
 Ein-Fachbereich-Fall geprüft.

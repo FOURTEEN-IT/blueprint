@@ -129,5 +129,5 @@ Harte Grenzen:
 - Bei Unsicherheit, ob eine Aenderung mechanisch ist oder eine echte Designentscheidung braucht: als nicht loesbar behandeln (Schritt 6), nie raten und trotzdem mergen.
 ```
 
-*Referenzimplementierung: Watchparty-Projekt, `docs/dependabot-routine.md`,
+*Referenzimplementierung: Ursprungsprojekt, `docs/dependabot-routine.md`,
 Routine „Merge critical Dependabot PRs using OpenRewrite".*

@@ -14,8 +14,8 @@ import java.util.Objects;
  *
  * Fachfrei benanntes Beispiel-Trio, das nur die Bauweise demonstriert. Als
  * Referenzbeispiel fuer ein echtes Aggregat mit Entities, Value Objects und
- * benannten Uebergaengen (statt Setter) siehe {@code Room} im
- * Watchparty-Projekt ({@code closeCurrentRound}, {@code addPick}, ...) —
+ * benannten Uebergaengen (statt Setter) siehe {@code Room} in der
+ * Referenzimplementierung ({@code closeCurrentRound}, {@code addPick}, ...) —
  * nicht kopiert, weil {@code Room} Fachlogik traegt, die in diesem
  * Blueprint-Modul nichts zu suchen hat.
  *

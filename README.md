@@ -2,11 +2,11 @@
 
 Ein modularer Baukasten für neue Projekte: keine Fachlogik, sondern die
 technischen Bausteine (Backend-Gerüst, Frontend-Gerüst, Persistenz,
-Deployment, Qualitäts-Gates), die sich in der Referenzimplementierung
-[Watchparty](https://github.com/ajFourteen/Watchparty) bereits bewährt
-haben — hier herausgelöst, generalisiert und einzeln wählbar gemacht.
+Deployment, Qualitäts-Gates), die sich in einem echten Projekt als
+Referenzimplementierung bereits bewährt haben — hier herausgelöst,
+generalisiert und einzeln wählbar gemacht.
 
-Kein Modul enthält Watchparty-Fachcode. Jedes Modul ist für sich
+Kein Modul enthält Fachcode der Referenzimplementierung. Jedes Modul ist für sich
 dokumentiert und über `{{...}}`-Platzhalter an ein neues Projekt anpassbar.
 
 ## Module

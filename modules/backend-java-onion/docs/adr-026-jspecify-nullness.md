@@ -2,7 +2,7 @@
 
 **Status:** Vorlage — im Zielprojekt mit eigener Nummer übernehmen.
 
-**Referenzimplementierung:** Watchparty-Projekt, ADR-026.
+**Referenzimplementierung:** Ursprungsprojekt, ADR-026.
 
 **Kontext:** Ohne eine im Typsystem sichtbare Nullness sehen ein Feld, das
 garantiert gesetzt ist, und ein Feld, das fehlen darf, im Code identisch

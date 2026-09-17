@@ -3,7 +3,7 @@
 // sondern ein Fragment: die Zeilen gehören in den bestehenden
 // dependencies { ... }-Block.
 //
-// Vorbild: build.gradle.kts (Watchparty), Abschnitt zur Tippspiel-Persistenz.
+// Vorbild: build.gradle.kts (Referenzimplementierung), Abschnitt zur Tippspiel-Persistenz.
 // Standard-JDBC-Weg von Spring Boot, kein Spring Data -- Repository-Adapter
 // sprechen JdbcTemplate direkt, Migrationen laufen ueber Flyway von Hand
 // (DataSource-/Flyway-Autoconfiguration ist im Zielprojekt auszuschalten,

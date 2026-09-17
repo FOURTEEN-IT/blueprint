@@ -10,7 +10,7 @@ import java.util.UUID;
  *
  * Fachfrei benanntes Beispiel-Trio ({@code ExampleAggregate}/
  * {@code ExampleEntity}/{@code ExampleId}) — es zeigt nur die Bauweise, kein
- * Fachkonzept. In der Referenzimplementierung (Watchparty-Projekt) sind
+ * Fachkonzept. In der Referenzimplementierung sind
  * {@code PlayerId}/{@code RoundId}/{@code BetId}/{@code OutcomeId} die
  * echten Gegenstuecke: jede Identitaet ihr eigener Typ, gegeneinander nicht
  * austauschbar — ein Vertauschen zweier IDs ist dort ein Kompilierfehler,

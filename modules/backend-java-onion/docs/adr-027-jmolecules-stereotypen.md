@@ -2,7 +2,7 @@
 
 **Status:** Vorlage — im Zielprojekt mit eigener Nummer übernehmen.
 
-**Referenzimplementierung:** Watchparty-Projekt, ADR-027.
+**Referenzimplementierung:** Ursprungsprojekt, ADR-027.
 
 **Kontext:** „Dieser Typ ist der Aggregate Root" und „dieses Paket ist der
 Domänenring" lassen sich als Satz in Javadoc und Paketname ausdrücken —

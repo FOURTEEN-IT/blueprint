@@ -3,7 +3,7 @@
 // Kein eigenständiges Buildfile: Die drei Abschnitte (Plugins, Dependencies,
 // Tasks) werden in das Ziel-build.gradle.kts an den passenden Stellen
 // zusammengeführt (Generator-Skill). Reihenfolge/Gruppierung folgt der
-// Referenzimplementierung (Watchparty), damit ein Vergleich der beiden
+// Referenzimplementierung, damit ein Vergleich der beiden
 // Buildfiles nicht durch reine Umsortierung erschwert wird.
 //
 // Platzhalter: {{PACKAGE_BASE}} (z. B. de.example.projectname),
@@ -69,7 +69,7 @@ dependencies {
     errorprone("com.uber.nullaway:nullaway:{{NULLAWAY_VERSION}}")
 }
 
-// Wie Watchparty: jgiven-junit5/jqwik-engine (falls das Projekt sie
+// Wie in der Referenzimplementierung: jgiven-junit5/jqwik-engine (falls das Projekt sie
 // einbindet) haengen eigene JUnit-Versionen an, die mit Spring Boots
 // Dependency-Management fuer junit-platform-launcher auseinanderlaufen
 // koennen (NoSuchMethodError auf NamespacedHierarchicalStore$CloseAction).
