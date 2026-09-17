@@ -1,0 +1,275 @@
+package {{PACKAGE_BASE}};
+
+import com.tngtech.archunit.base.DescribedPredicate;
+import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.domain.JavaModifier;
+import com.tngtech.archunit.core.importer.ImportOption;
+import com.tngtech.archunit.junit.AnalyzeClasses;
+import com.tngtech.archunit.junit.ArchTest;
+import com.tngtech.archunit.lang.ArchRule;
+import org.junit.jupiter.api.Tag;
+import org.jmolecules.architecture.onion.classical.ApplicationServiceRing;
+import org.jmolecules.architecture.onion.classical.DomainModelRing;
+import org.jmolecules.architecture.onion.classical.DomainServiceRing;
+import org.jmolecules.architecture.onion.classical.InfrastructureRing;
+import org.jmolecules.ddd.annotation.AggregateRoot;
+import org.jmolecules.ddd.annotation.Entity;
+import org.jmolecules.ddd.annotation.Service;
+import org.jmolecules.ddd.annotation.ValueObject;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.List;
+import java.util.Set;
+
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
+import static com.tngtech.archunit.library.Architectures.onionArchitecture;
+
+/**
+ * Haelt zwei zusammengehoerige Regelwerke nach: die Ringstruktur (ADR-024-
+ * Vorlage) und die DDD-Bausteine (ADR-027-Vorlage).
+ *
+ * Ohne diese Regeln waeren beide eine Absichtserklaerung — ein einziger
+ * bequemer Import oder eine vergessene Annotation genuegt, um sie zu
+ * durchloechern, und niemand merkt es. Geprueft wird auf dem Bytecode: Damit
+ * zaehlen auch Rueckgabetypen, Feldtypen und Annotationen, nicht nur die
+ * Importzeile.
+ *
+ * Referenzimplementierung: Watchparty-Projekt,
+ * {@code src/test/java/.../ArchitectureTest.java} — dort mit den echten
+ * Fachringen (ws/http/file/db/mail/feed/ratelimit) und einer gewachsenen
+ * Liste an Invarianten-spezifischen Regeln (Nebenlaeufigkeit, blockierende
+ * Aufrufe). Dieses Template enthaelt nur den Kern, der in jedem
+ * Onion-Backend gilt; projektspezifische Invarianten kommen als eigene
+ * {@code @ArchTest}-Regeln dazu, nicht als Aenderung an diesem Kern.
+ */
+@Tag("arch")
+@AnalyzeClasses(packages = "{{PACKAGE_BASE}}", importOptions = ImportOption.DoNotIncludeTests.class)
+class ArchitectureTest {
+
+    /**
+     * Typen in domain/model, die bewusst keinen DDD-Baustein tragen (z. B.
+     * ein reiner, statischer Katalog ohne Identitaet oder Wert) — analog zu
+     * {@code Bets} in der Referenzimplementierung. Anfangs leer: Ein Typ
+     * kommt hier nur mit einer im Code oder ADR dokumentierten Begruendung
+     * dazu, nie stillschweigend, weil {@link #jederDomaenentypTraegtEinenBaustein}
+     * ihn sonst zu Recht beanstandet.
+     */
+    private static final Set<String> TYPEN_OHNE_DDD_BAUSTEIN = Set.of(
+            // "ExampleCatalog",
+            "package-info");
+
+    // --- Ringe -----------------------------------------------------------
+
+    /**
+     * Die Ringe ueber die Paketnamen. {@code config} ist bewusst kein Ring,
+     * sondern die Kompositionswurzel und darf deshalb alles kennen — sie
+     * taucht hier nicht auf.
+     *
+     * {@code {{ADDITIONAL_ADAPTER_PORTS}}}: je einen {@code .adapter(name,
+     * package)}-Aufruf pro tatsaechlich vorhandenem Adapter (z. B. "web",
+     * "{{PACKAGE_BASE}}.adapter.in.web..", "db",
+     * "{{PACKAGE_BASE}}.adapter.out.db.."). Mindestens ein Adapter-Ring ist
+     * Pflicht — eine leere Architektur meldet ArchUnit als Fehler.
+     */
+    @ArchTest
+    static final ArchRule ringeZeigenNachInnen = onionArchitecture()
+            .domainModels("{{PACKAGE_BASE}}.domain.model..")
+            .domainServices("{{PACKAGE_BASE}}.domain.service..")
+            .applicationServices("{{PACKAGE_BASE}}.application..")
+            // {{ADDITIONAL_ADAPTER_PORTS}}
+            .ignoreDependency(resideIn("{{PACKAGE_BASE}}.config"), alwaysTrue());
+
+    /**
+     * Dieselbe Ringstruktur, diesmal ueber die jMolecules-Annotationen
+     * statt ueber Paketnamen: {@code @DomainModelRing},
+     * {@code @DomainServiceRing}, {@code @ApplicationServiceRing},
+     * {@code @InfrastructureRing} auf den {@code package-info.java}.
+     *
+     * Absichtlich selbst geschrieben statt mit
+     * {@code JMoleculesArchitectureRules.ensureOnionClassical()}: Die
+     * vorgefertigten jMolecules-ArchUnit-Regeln setzen eine ArchUnit-Version
+     * voraus, die zum Zeitpunkt dieser Vorlage nicht zuverlaessig mit
+     * aktuellen ArchUnit-Versionen zusammenspielt (NoSuchMethodError/
+     * AbstractMethodError zur Laufzeit, nicht beim Kompilieren — siehe
+     * ADR-027-Vorlage). Die Annotationen selbst sind reine Marker und davon
+     * unberuehrt; geprueft wird hier mit denselben stabilen
+     * ArchUnit-Bausteinen wie der Rest dieser Klasse.
+     */
+    @ArchTest
+    static final ArchRule ringeTragenIhreAnnotation = classes()
+            .that().haveSimpleName("package-info")
+            .and().resideInAnyPackage(
+                    "{{PACKAGE_BASE}}.domain.model",
+                    "{{PACKAGE_BASE}}.domain.service",
+                    "{{PACKAGE_BASE}}.application..",
+                    "{{PACKAGE_BASE}}.adapter..",
+                    "{{PACKAGE_BASE}}.config")
+            .should(tragenGenauDenErwartetenRing())
+            .because("die Ring-Annotation muss zum Paket passen (ADR-024/ADR-027-Vorlage)");
+
+    /**
+     * Der Kern bleibt framework-frei: Spring/Jakarta werden ausschliesslich
+     * in {@code config} und in den Adaptern verdrahtet. Sonst waere die
+     * Domaene ohne Spring-Kontext nicht mehr instanziierbar — und genau das
+     * sollen die schnellen unit/port-Tests pruefen koennen.
+     */
+    @ArchTest
+    static final ArchRule kernOhneSpring = com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses()
+            .that().resideInAnyPackage("..domain..", "..application..")
+            .should().dependOnClassesThat().resideInAnyPackage(
+                    "org.springframework..", "jakarta..")
+            .because("Domaene und Anwendungsring muessen ohne Framework instanziierbar bleiben (ADR-024-Vorlage)");
+
+    // --- DDD-Bausteine -----------------------------------------------------
+
+    /**
+     * Jeder oeffentliche Domaenentyp traegt genau einen Baustein-Stereotyp.
+     *
+     * Ohne diese Regel bemerkt niemand, wenn ein neuer Domaenentyp ohne
+     * Stereotyp dazukommt — die anderen Regeln hier pruefen nur, was
+     * annotiert *ist*, nicht, ob *alles* annotiert ist. Ausnahmen stehen in
+     * {@link #TYPEN_OHNE_DDD_BAUSTEIN}, nie stillschweigend im Code.
+     */
+    @ArchTest
+    static final ArchRule jederDomaenentypTraegtEinenBaustein = classes()
+            .that().resideInAPackage("{{PACKAGE_BASE}}.domain.model")
+            .and().arePublic()
+            .and(nichtVerschachtelt())
+            .and(DescribedPredicate.describe(
+                    "nicht in der Ausnahmeliste",
+                    javaClass -> !TYPEN_OHNE_DDD_BAUSTEIN.contains(javaClass.getSimpleName())))
+            .should().beAnnotatedWith(AggregateRoot.class)
+            .orShould().beAnnotatedWith(Entity.class)
+            .orShould().beAnnotatedWith(ValueObject.class)
+            .because("jeder Domaenentyp ist ein benannter DDD-Baustein, keiner rutscht unbemerkt durch (ADR-027-Vorlage)");
+
+    /**
+     * Ein {@code @Service} ist eine reine Funktion: kein Instanzzustand, der
+     * zwischen zwei Aufrufen ueberleben und die Zustandslosigkeit
+     * unterlaufen koennte.
+     */
+    @ArchTest
+    static final ArchRule domainServicesSindZustandslos = classes()
+            .that().areAnnotatedWith(Service.class)
+            .should().haveOnlyFinalFields()
+            .andShould(keineInstanzfelderHaben())
+            .because("ein Domain Service rechnet, er erinnert sich nicht");
+
+    /**
+     * Entities aendern sich nur ueber benannte Uebergaenge, die das Aggregat
+     * anbietet, nie ueber einen oeffentlichen Setter von aussen — die
+     * Aggregatgrenze als Regel, nicht nur als paket-privater Modifier.
+     */
+    @ArchTest
+    static final ArchRule keineOeffentlichenSetterAufEntities = methods()
+            .that().haveNameMatching("set[A-Z].*")
+            .and().areDeclaredInClassesThat().areAnnotatedWith(Entity.class)
+            .should().notBePublic()
+            .because("Zustandsaenderungen laufen ueber benannte Uebergaenge, nicht ueber Setter")
+            .allowEmptyShould(true);
+
+    /** Dieselbe Regel fuer den Aggregate Root. */
+    @ArchTest
+    static final ArchRule keineOeffentlichenSetterAufDemAggregateRoot = methods()
+            .that().haveNameMatching("set[A-Z].*")
+            .and().areDeclaredInClassesThat().areAnnotatedWith(AggregateRoot.class)
+            .should().notBePublic()
+            .because("Zustandsaenderungen laufen ueber benannte Uebergaenge, nicht ueber Setter")
+            .allowEmptyShould(true);
+
+    // --- Nebenlaeufigkeit: nur uebernehmen, wenn das Projekt eine
+    // Raum-Thread-artige Invariante hat (siehe CLAUDE.md-Vorlage im
+    // Zielprojekt). Sonst weglassen — ein Backend ohne Single-Writer-Actor
+    // braucht diese Regel nicht und sie waere irrefuehrend streng.
+    //
+    // @ArchTest
+    // static final ArchRule domaeneOhneNebenlaeufigkeit = ...
+
+    // --- Hilfsmethoden -----------------------------------------------------
+
+    private static DescribedPredicate<JavaClass> resideIn(String paket) {
+        return DescribedPredicate.describe(
+                "in " + paket,
+                javaClass -> javaClass.getName().startsWith(paket));
+    }
+
+    private static DescribedPredicate<JavaClass> alwaysTrue() {
+        return DescribedPredicate.describe("beliebig", javaClass -> true);
+    }
+
+    private static DescribedPredicate<JavaClass> nichtVerschachtelt() {
+        return DescribedPredicate.describe(
+                "nicht verschachtelt",
+                javaClass -> !javaClass.getName().contains("$"));
+    }
+
+    /**
+     * Fuer jede {@code package-info}-Klasse: welche der vier
+     * Ring-Annotationen traegt sie tatsaechlich, welche haette sie nach dem
+     * Paketnamen tragen muessen (Praefix-Match, laengster Treffer gewinnt)?
+     * Beides muss genau uebereinstimmen.
+     */
+    private static com.tngtech.archunit.lang.ArchCondition<JavaClass> tragenGenauDenErwartetenRing() {
+        record RingePaket(String praefix, Class<? extends java.lang.annotation.Annotation> ring) {
+        }
+        List<RingePaket> zuordnung = List.of(
+                new RingePaket("{{PACKAGE_BASE}}.domain.model", DomainModelRing.class),
+                new RingePaket("{{PACKAGE_BASE}}.domain.service", DomainServiceRing.class),
+                new RingePaket("{{PACKAGE_BASE}}.application", ApplicationServiceRing.class),
+                new RingePaket("{{PACKAGE_BASE}}.adapter", InfrastructureRing.class),
+                new RingePaket("{{PACKAGE_BASE}}.config", InfrastructureRing.class));
+        List<Class<? extends java.lang.annotation.Annotation>> alleRinge = List.of(
+                DomainModelRing.class, DomainServiceRing.class, ApplicationServiceRing.class, InfrastructureRing.class);
+
+        return new com.tngtech.archunit.lang.ArchCondition<>("genau den vorgesehenen Ring tragen") {
+            @Override
+            public void check(JavaClass javaClass, com.tngtech.archunit.lang.ConditionEvents events) {
+                String paket = javaClass.getPackageName();
+                Class<? extends java.lang.annotation.Annotation> erwartet = zuordnung.stream()
+                        .filter(z -> paket.equals(z.praefix()) || paket.startsWith(z.praefix() + "."))
+                        .max(java.util.Comparator.comparingInt(z -> z.praefix().length()))
+                        .map(RingePaket::ring)
+                        .orElse(null);
+                if (erwartet == null) {
+                    events.add(com.tngtech.archunit.lang.SimpleConditionEvent.violated(
+                            javaClass, "Paket " + paket + " ist keinem Ring zugeordnet"));
+                    return;
+                }
+                for (Class<? extends java.lang.annotation.Annotation> ring : alleRinge) {
+                    boolean traegt = javaClass.isAnnotatedWith(ring);
+                    boolean sollTragen = ring.equals(erwartet);
+                    if (traegt != sollTragen) {
+                        events.add(com.tngtech.archunit.lang.SimpleConditionEvent.violated(javaClass,
+                                javaClass.getName() + (sollTragen
+                                        ? " fehlt @" + ring.getSimpleName() + " (erwartet fuer " + paket + ")"
+                                        : " traegt unerwartet @" + ring.getSimpleName())));
+                    }
+                }
+            }
+        };
+    }
+
+    /**
+     * {@code haveOnlyFinalFields()} allein reicht nicht: Ein {@code final}
+     * Feld, das ein veraenderliches Objekt haelt (etwa eine {@code Map}),
+     * waere immer noch Zustand — die einfachste, ueberpruefbare Aussage ist
+     * "keine Instanzfelder ueberhaupt".
+     */
+    private static com.tngtech.archunit.lang.ArchCondition<JavaClass> keineInstanzfelderHaben() {
+        return new com.tngtech.archunit.lang.ArchCondition<>("keine Instanzfelder haben") {
+            @Override
+            public void check(JavaClass javaClass, com.tngtech.archunit.lang.ConditionEvents events) {
+                for (Field field : javaClass.reflect().getDeclaredFields()) {
+                    if (!Modifier.isStatic(field.getModifiers()) && !field.isSynthetic()) {
+                        events.add(com.tngtech.archunit.lang.SimpleConditionEvent.violated(
+                                javaClass, javaClass.getName() + " hat das Instanzfeld " + field.getName()));
+                    }
+                }
+            }
+        };
+    }
+}

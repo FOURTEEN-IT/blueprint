@@ -1,0 +1,75 @@
+package {{PACKAGE_BASE}}.config;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
+import {{PACKAGE_BASE}}.adapter.out.db.ExampleRepositoryJdbc;
+import {{PACKAGE_BASE}}.application.port.out.ExampleRepository;
+
+import org.flywaydb.core.Flyway;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+
+import javax.sql.DataSource;
+
+/**
+ * Verdrahtet die Postgres-Anbindung von Hand: eigene Beans statt
+ * Spring-Boot-Autoconfiguration fuer DataSource und Flyway (die im
+ * Zielprojekt auszuschalten ist, siehe README.md dieses Moduls).
+ *
+ * Vorbild: config/league/LeagueDatabaseConfig.java (Watchparty).
+ *
+ * {@code @ConditionalOnProperty} auf {@code {{app}}.db.url}: Fehlt die
+ * Eigenschaft, entsteht in dieser Klasse kein einziger Bean -- der
+ * Datenbank-Teil bleibt dann funktionslos, aber die Anwendung startet
+ * trotzdem. Das ist zugleich die Voreinstellung fuer lokale Entwicklung und
+ * fuer Tests, die keine Datenbank kennen. Deshalb traegt hier jeder Bean,
+ * der von der DataSource abhaengt (auch die Repository-Beans), dieselbe
+ * Bedingung -- nicht nur die DataSource selbst.
+ */
+@Configuration
+@ConditionalOnProperty(prefix = "{{app}}.db", name = "url")
+public class DatabaseConfig {
+
+    @Bean(destroyMethod = "close")
+    public DataSource dataSource(
+            @Value("${{{app}}.db.url}") String url,
+            @Value("${{{app}}.db.username:}") String username,
+            @Value("${{{app}}.db.password:}") String password) {
+        HikariConfig hikariConfig = new HikariConfig();
+        hikariConfig.setJdbcUrl(url);
+        if (!username.isBlank()) {
+            hikariConfig.setUsername(username);
+        }
+        if (!password.isBlank()) {
+            hikariConfig.setPassword(password);
+        }
+        HikariDataSource dataSource = new HikariDataSource(hikariConfig);
+
+        Flyway.configure()
+                .dataSource(dataSource)
+                .locations("classpath:db/{{DB_SCHEMA_LABEL}}/migration")
+                .load()
+                .migrate();
+
+        return dataSource;
+    }
+
+    @Bean
+    public NamedParameterJdbcTemplate jdbcTemplate(DataSource dataSource) {
+        return new NamedParameterJdbcTemplate(dataSource);
+    }
+
+    @Bean
+    public ExampleRepository exampleRepository(NamedParameterJdbcTemplate jdbcTemplate) {
+        return new ExampleRepositoryJdbc(jdbcTemplate);
+    }
+
+    // Weitere Repository-Beans nach demselben Muster: je ein Bean, der den
+    // Port (application/port/out) auf seinen Jdbc-Adapter (adapter/out/db)
+    // abbildet -- siehe LeagueDatabaseConfig fuer mehrere Repositories
+    // nebeneinander.
+}

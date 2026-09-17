@@ -1,0 +1,72 @@
+package {{PACKAGE_BASE}}.adapter.out.db;
+
+import {{PACKAGE_BASE}}.application.port.out.ExampleRepository;
+
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * {@link ExampleRepository} ueber {@link NamedParameterJdbcTemplate} --
+ * bewusst kein Spring Data (siehe docs/muster-db-adapter.md dieses Moduls).
+ * {@link #save} ist ein Upsert ueber die Identitaet des Aggregats: einmal
+ * eingefuegt, danach per {@code ON CONFLICT ... DO UPDATE} aktualisiert,
+ * statt getrennt zwischen "anlegen" und "aendern" zu unterscheiden.
+ *
+ * Vorbild: adapter/out/db/AccountRepositoryJdbc.java (Watchparty) -- Struktur
+ * und Upsert-Muster von dort uebernommen, ohne Watchparty-Fachtypen. Beim
+ * Einspielen sind {@code ExampleEntity}/{@code ExampleId} durch das echte
+ * Domänenmodell zu ersetzen, {@code ExampleRepository} durch dessen
+ * Port-Interface unter application/port/out.
+ */
+public class ExampleRepositoryJdbc implements ExampleRepository {
+
+    private static final RowMapper<ExampleEntity> ROW_MAPPER = (rs, rowNum) -> ExampleEntity.of(
+            ExampleId.of(rs.getString("id")),
+            rs.getString("name"),
+            rs.getTimestamp("created_at").toInstant());
+
+    private final NamedParameterJdbcTemplate jdbc;
+
+    public ExampleRepositoryJdbc(NamedParameterJdbcTemplate jdbc) {
+        this.jdbc = jdbc;
+    }
+
+    @Override
+    public void save(ExampleEntity entity) {
+        var params = new MapSqlParameterSource()
+                .addValue("id", entity.getId().value())
+                .addValue("name", entity.getName())
+                .addValue("createdAt", java.sql.Timestamp.from(entity.getCreatedAt()));
+        jdbc.update("""
+                INSERT INTO example_entity (id, name, created_at)
+                VALUES (:id, :name, :createdAt)
+                ON CONFLICT (id) DO UPDATE SET
+                    name = EXCLUDED.name
+                """, params);
+    }
+
+    @Override
+    public Optional<ExampleEntity> findById(ExampleId id) {
+        List<ExampleEntity> found = jdbc.query(
+                "SELECT id, name, created_at FROM example_entity WHERE id = :id",
+                new MapSqlParameterSource("id", id.value()),
+                ROW_MAPPER);
+        return found.stream().findFirst();
+    }
+
+    @Override
+    public void delete(ExampleId id) {
+        jdbc.update(
+                "DELETE FROM example_entity WHERE id = :id",
+                new MapSqlParameterSource("id", id.value()));
+    }
+
+    @Override
+    public List<ExampleEntity> findAll() {
+        return jdbc.query("SELECT id, name, created_at FROM example_entity", ROW_MAPPER);
+    }
+}

@@ -1,0 +1,79 @@
+name: Release & Deploy
+
+# Ausloeser ist Semantic Release (falls eingebunden, siehe
+# .releaserc.json): nur ein Commit mit "fix:", "feat:" o.ae. erzeugt einen
+# Release, und nur ein tatsaechlich veroeffentlichter Release loest den
+# Fly-Deploy aus. Referenz: Watchparty (release.yml). Ohne semantic-release
+# den "release"-Job durch einen einfachen Trigger auf den Hauptzweig
+# ersetzen.
+
+on:
+  push:
+    branches: [{{MAIN_BRANCH}}]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  # Ruft build.yml als wiederverwendbaren Workflow auf, statt die Pruefung
+  # hier zu duplizieren. Ein roter Test verhindert damit Release und Deploy.
+  build:
+    uses: ./.github/workflows/build.yml
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    outputs:
+      new_release_published: ${{ steps.semrelease.outputs.new_release_published }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Semantic Release
+        id: semrelease
+        uses: cycjimmy/semantic-release-action@v6
+        with:
+          extra_plugins: |
+            @semantic-release/changelog@6
+            @semantic-release/git@10
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy:
+    needs: release
+    if: needs.release.outputs.new_release_published == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: {{MAIN_BRANCH}}
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      # --ha=false ist Pflicht: fly deploy legt sonst eigenmaechtig eine
+      # zweite Maschine an, auch bei min_machines_running = 1 (fly.toml).
+      # Zwei Maschinen wuerden die Ein-Instanz-Entscheidung unterlaufen
+      # (siehe README dieses Moduls).
+      - run: flyctl deploy --ha=false --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      # Gegenstueck zu --ha=false: automatisierte Kontrolle statt eines
+      # Kommentars, der auf einen Menschen hofft. Skript liegt projektseitig,
+      # z. B. unter ci/eine-maschine-pruefen.sh (Vorbild: Watchparty).
+      # - name: Genau eine Maschine
+      #   run: {{SINGLE_MACHINE_CHECK_SCRIPT}} {{APP_NAME}}
+      #   env:
+      #     FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      # Optionaler Rauchtest gegen die laufende Instanz -- der Fly-
+      # Healthcheck in fly.toml prueft nur die statische Auslieferung bzw.
+      # einen einzelnen HTTP-Pfad, nicht die eigentliche Anwendungslogik
+      # dahinter (z. B. einen internen Event-Loop). Vorbild: Watchparty
+      # (ci/rauchtest.mjs), dort ueber eine echte WebSocket-Verbindung.
+      # - name: Rauchtest gegen die laufende Instanz
+      #   run: node {{SMOKE_TEST_SCRIPT}} {{SMOKE_TEST_URL}}
