@@ -2,9 +2,7 @@
 //
 // Kein eigenständiges Buildfile: Die drei Abschnitte (Plugins, Dependencies,
 // Tasks) werden in das Ziel-build.gradle.kts an den passenden Stellen
-// zusammengeführt (Generator-Skill). Reihenfolge/Gruppierung folgt der
-// Referenzimplementierung, damit ein Vergleich der beiden
-// Buildfiles nicht durch reine Umsortierung erschwert wird.
+// zusammengeführt (Generator-Skill).
 //
 // Platzhalter: {{PACKAGE_BASE}} (z. B. de.example.projectname),
 // {{PROJECT_NAME}}, {{JAVA_VERSION}}. jacoco/pitest/Gate-Verdrahtung an
@@ -49,9 +47,9 @@ dependencies {
     implementation("org.jmolecules:jmolecules-ddd:{{JMOLECULES_VERSION}}")
     implementation("org.jmolecules:jmolecules-onion-architecture:{{JMOLECULES_VERSION}}")
 
-    // Ohne Mockito: Test Doubles werden von Hand geschrieben (Konvention der
-    // Referenzimplementierung). Der Ausschluss macht daraus eine Regel statt
-    // einer Absprache — ein versehentliches mock(...) kompiliert nicht.
+    // Ohne Mockito: Test Doubles werden von Hand geschrieben. Der Ausschluss
+    // macht daraus eine Regel statt einer Absprache — ein versehentliches
+    // mock(...) kompiliert nicht.
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(group = "org.mockito")
     }
@@ -69,8 +67,8 @@ dependencies {
     errorprone("com.uber.nullaway:nullaway:{{NULLAWAY_VERSION}}")
 }
 
-// Wie in der Referenzimplementierung: jgiven-junit5/jqwik-engine (falls das Projekt sie
-// einbindet) haengen eigene JUnit-Versionen an, die mit Spring Boots
+// jgiven-junit5/jqwik-engine (falls das Projekt sie einbindet) haengen
+// eigene JUnit-Versionen an, die mit Spring Boots
 // Dependency-Management fuer junit-platform-launcher auseinanderlaufen
 // koennen (NoSuchMethodError auf NamespacedHierarchicalStore$CloseAction).
 // eachDependency erzwingt vorab denselben Stand ueberall. {{JUNIT_VERSION}}
@@ -97,7 +95,7 @@ tasks.withType<Test> {
 // von jeder Ebene. `test` ist der schnelle Lauf (unit, port); `adapterTest`
 // und `apiTest` kommen extra dazu, weil sie Spring bzw. einen echten Socket
 // brauchen. `archTest` laeuft NICHT ueber Tags, sondern ueber die Engine
-// (`includeEngines("archunit")`) — Fund aus der Referenzimplementierung:
+// (`includeEngines("archunit")`):
 // archunit-junit5-engine implementiert getTags() auf keinem seiner
 // TestDescriptor-Knoten, jeder JUnit-Platform-TagFilter sortiert deshalb
 // ALLE ArchUnit-Tests aus, unabhaengig von den gesetzten Tags. Ein

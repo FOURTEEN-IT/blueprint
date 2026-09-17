@@ -1,19 +1,17 @@
 # Cloudflare vor Fly.io einrichten
 
-**Wichtiger Hinweis zur Herkunft:** Dieser Teil ist **nicht** aus der
-Referenzimplementierung extrahiert. Diese setzt bewusst **kein** Cloudflare
-ein — die DNS-Subdomain liegt dort direkt bei IONOS (CNAME auf
-`*.fly.dev`), und ADR-018 verwirft einen vorgeschalteten Proxy ausdruecklich:
+**Standardmäßig kein Cloudflare:** Die Fly.io-Vorlage dieses Moduls setzt
+bewusst **kein** Cloudflare ein — die DNS-Subdomain liegt direkt beim
+Registrar (CNAME auf `*.fly.dev`), und ADR-018 verwirft einen
+vorgeschalteten Proxy ausdruecklich:
 
-> Der Proxy von Cloudflare o. Ä. bleibt außen vor (bei IONOS ohnehin nicht
-> im Weg): eine zusätzliche Schicht brächte ein weiteres Idle-Timeout und
-> eine zweite Zertifikatskette, ohne Nutzen für ein paar Handys im selben
-> Raum.
+> Der Proxy von Cloudflare o. Ä. bleibt außen vor: eine zusätzliche Schicht
+> brächte ein weiteres Idle-Timeout und eine zweite Zertifikatskette, ohne
+> Nutzen für ein paar Handys im selben Raum.
 
 Für eine Anwendung mit wenigen, bekannten Nutzern in einem Raum ist das eine
 vernünftige Entscheidung. Dieses Dokument liefert trotzdem eine eigenständige
-Cloudflare-Vorlage für Projekte, die *einen* der folgenden Gründe haben, die
-bei der Referenzimplementierung nicht vorliegen:
+Cloudflare-Vorlage für Projekte, die *einen* der folgenden Gründe haben:
 
 - Öffentliche Reichweite statt eines geschlossenen Freundeskreises (DDoS-
   Schutz, Bot-Abwehr, Caching).
@@ -22,7 +20,7 @@ bei der Referenzimplementierung nicht vorliegen:
 - Eine vorhandene Cloudflare-Organisation, in die weitere Subdomains ohnehin
   einsortiert werden.
 
-Wer keinen dieser Gründe hat, sollte wie die Referenzimplementierung verfahren: DNS direkt
+Wer keinen dieser Gründe hat, sollte beim Standard bleiben: DNS direkt
 beim Registrar, kein zusätzlicher Proxy. Jede zusätzliche Schicht bringt ein
 eigenes Idle-Timeout und eine eigene Zertifikatskette mit — bei WebSockets
 (siehe Invarianten-Hinweis im Modul-README) ein zusätzliches Risiko, keine
@@ -73,7 +71,7 @@ Cloudflare liegen soll (WAF, Caching von statischen Assets, DDoS-Schutz).
 ## Variante B: Getrenntes Frontend über Cloudflare Pages
 
 Nur relevant, wenn Frontend und Backend getrennt deployt werden (anders als
-in der Referenzimplementierung, wo das Frontend-Build ins Backend-Jar
+im Standardfall dieses Blueprints, wo das Frontend-Build ins Backend-Jar
 gepackt wird, siehe Modul `frontend-react-vite`). Für ein statisches
 React/Vite-Build, während
 nur die API/das WebSocket-Backend auf Fly.io läuft:
@@ -84,8 +82,8 @@ nur die API/das WebSocket-Backend auf Fly.io läuft:
 2. Umgebungsvariable für die Backend-URL setzen (z. B.
    `VITE_API_BASE_URL=https://{{SUBDOMAIN}}.{{DOMAIN}}`), damit das
    Frontend weiß, wohin es WebSocket-/API-Anfragen schickt — bei getrennten
-   Deployments gibt es keinen gemeinsamen Origin mehr wie im Modell der
-   Referenzimplementierung.
+   Deployments gibt es keinen gemeinsamen Origin mehr wie im Standardfall
+   (Frontend-Build im Backend-Jar).
 3. CORS am Backend für die Pages-Domain freigeben (`https://{{PAGES_PROJECT}}.pages.dev`
    und die eigene Domain, falls per Custom Domain verbunden).
 4. Custom Domain für Pages einrichten (Cloudflare Pages → Custom domains) —
@@ -95,8 +93,7 @@ nur die API/das WebSocket-Backend auf Fly.io läuft:
 ## Was hier bewusst fehlt
 
 Kein Cloudflare Workers, kein Cache-Rules-Feintuning, kein Argo Smart
-Routing — das sind Erweiterungen für einen Bedarf, den weder die
-Referenzimplementierung noch die meisten aus diesem Blueprint entstehenden
-Projekte haben. Wer sie
+Routing — das sind Erweiterungen für einen Bedarf, den die meisten aus
+diesem Blueprint entstehenden Projekte nicht haben. Wer sie
 braucht, hat vermutlich auch die Erfahrung, sie selbst einzurichten; diese
 Vorlage deckt nur den Einstieg.

@@ -2,7 +2,6 @@ name: Build & Test
 
 # Laeuft auf jedem Push und jeder Pull Request, damit ein roter Test sichtbar
 # wird, bevor er ueberhaupt die Chance hat, auf {{MAIN_BRANCH}} zu landen.
-# Vorbild: Referenzimplementierung (build.yml).
 
 on:
   # {{MAIN_BRANCH}} ausgenommen: release.yml.template deckt den Hauptzweig

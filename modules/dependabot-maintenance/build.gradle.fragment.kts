@@ -1,10 +1,10 @@
 // Modul dependabot-maintenance -- OpenRewrite fuer Major-Versionsspruenge,
 // die die taegliche Dependabot-Routine (docs/dependabot-routine.md) ausloest.
 //
-// Herkunft: aus der Referenzimplementierung (build.gradle.kts, ADR-042) uebernommen. Setzt
-// kein anderes Modul dieses Blueprints zwingend voraus -- OpenRewrite laeuft
-// auf jedem Gradle/Java-Projekt -- ist aber nur sinnvoll mit
-// backend-java-onion (oder einem gleichwertigen Gradle-Projekt).
+// Siehe ADR-042. Setzt kein anderes Modul dieses Blueprints zwingend voraus
+// -- OpenRewrite laeuft auf jedem Gradle/Java-Projekt -- ist aber nur
+// sinnvoll mit backend-java-onion (oder einem gleichwertigen
+// Gradle-Projekt).
 //
 // Einspielen: An das Ende von build.gradle.kts des Zielprojekts haengen.
 //

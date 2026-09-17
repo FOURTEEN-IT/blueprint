@@ -3,8 +3,6 @@
 **Status:** Vorlage — im Zielprojekt mit eigener Nummer und ggf. angepasster
 Begründung übernehmen.
 
-**Referenzimplementierung:** Ursprungsprojekt, ADR-024.
-
 **Kontext:** Ohne eine erzwungene Abhängigkeitsrichtung wandert Framework-
 Code (Spring, ein HTTP-Client, ein Nachrichten-Objekt mit Jackson-
 Annotationen) unbemerkt in den fachlichen Kern. Ein Kern, der Spring kennt,
@@ -25,8 +23,8 @@ außerhalb der Ringe und die einzige Stelle mit Framework-Beans.
   im Adapter-Ring.
 - **Domänentypen kennen keine Adapter.** Ein Aggregat, das sein eigenes
   Speicherformat kennen müsste, bricht die Regel — stattdessen entsteht ein
-  eigenes, vom Modell unabhängiges Format (Beispiel in der
-  Referenzimplementierung: `RoomSnapshot`, bewusst kein Modellbaustein).
+  eigenes, vom Modell unabhängiges Format (z. B. ein `*Snapshot`-Typ,
+  bewusst kein Modellbaustein).
 - **Die Ringregel ist ein Test, keine Konvention.** `ArchitectureTest`
   prüft auf Bytecode-Ebene (Rückgabetypen, Feldtypen, nicht nur
   Importzeilen).

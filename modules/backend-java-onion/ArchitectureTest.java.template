@@ -38,13 +38,10 @@ import static com.tngtech.archunit.library.Architectures.onionArchitecture;
  * zaehlen auch Rueckgabetypen, Feldtypen und Annotationen, nicht nur die
  * Importzeile.
  *
- * Referenzimplementierung:
- * {@code src/test/java/.../ArchitectureTest.java} — dort mit den echten
- * Fachringen (ws/http/file/db/mail/feed/ratelimit) und einer gewachsenen
- * Liste an Invarianten-spezifischen Regeln (Nebenlaeufigkeit, blockierende
- * Aufrufe). Dieses Template enthaelt nur den Kern, der in jedem
- * Onion-Backend gilt; projektspezifische Invarianten kommen als eigene
- * {@code @ArchTest}-Regeln dazu, nicht als Aenderung an diesem Kern.
+ * Dieses Template enthaelt nur den Kern, der in jedem Onion-Backend gilt;
+ * projektspezifische Invarianten (z. B. Nebenlaeufigkeit, blockierende
+ * Aufrufe, weitere Fachringe) kommen als eigene {@code @ArchTest}-Regeln
+ * dazu, nicht als Aenderung an diesem Kern.
  */
 @Tag("arch")
 @AnalyzeClasses(packages = "{{PACKAGE_BASE}}", importOptions = ImportOption.DoNotIncludeTests.class)
@@ -52,8 +49,8 @@ class ArchitectureTest {
 
     /**
      * Typen in domain/model, die bewusst keinen DDD-Baustein tragen (z. B.
-     * ein reiner, statischer Katalog ohne Identitaet oder Wert) — analog zu
-     * {@code Bets} in der Referenzimplementierung. Anfangs leer: Ein Typ
+     * ein reiner, statischer Katalog ohne Identitaet oder Wert). Anfangs
+     * leer: Ein Typ
      * kommt hier nur mit einer im Code oder ADR dokumentierten Begruendung
      * dazu, nie stillschweigend, weil {@link #jederDomaenentypTraegtEinenBaustein}
      * ihn sonst zu Recht beanstandet.

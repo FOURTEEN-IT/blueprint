@@ -3,9 +3,7 @@
 Liefert das Muster für Postgres-Persistenz ohne Spring Data: Flyway-Migrationen
 für das Schema, `NamedParameterJdbcTemplate` für die Repository-Adapter,
 manuelles DataSource/Flyway-Wiring statt Spring-Boot-Autoconfiguration, und
-eine Testcontainers-Basis für alle DB-Tests. Referenzimplementierung ist das
-Tippspiel-Modul des Ursprungsprojekts (`adapter/out/db`, `config/league/ExampleDatabaseConfig`,
-`src/main/resources/db/league/migration`).
+eine Testcontainers-Basis für alle DB-Tests.
 
 ## Abhängigkeit
 
@@ -22,11 +20,11 @@ Dateien einhängen. Ohne dieses Fundament gibt es keine Stelle, an der
 - Adapter (Implementierung) landet in `adapter/out/db/`.
 - Konfiguration (DataSource + Flyway-Wiring) landet in `config/` (bzw. einem
   Unterpaket, falls das Zielprojekt seine Konfiguration nach Fachbereich
-  aufteilt, wie es die Referenzimplementierung mit `config/league` tut).
+  aufteilt, z. B. `config/{{DB_SCHEMA_LABEL}}`).
 
 ## Platzhalter
 
-| Platzhalter | Bedeutung | Beispiel aus der Referenzimplementierung |
+| Platzhalter | Bedeutung | Beispiel |
 |---|---|---|
 | `{{PACKAGE_BASE}}` | Basis-Package des Zielprojekts | `de.fourteen.example` |
 | `{{app}}` | Präfix für Spring-Properties | `example` (→ `example.league.db.url`) |
@@ -38,7 +36,7 @@ Die Property, die die Aktivierung steuert, heißt nach diesem Schema
 
 ## Optionale Aktivierung
 
-Das zentrale Muster aus `LeagueDatabaseConfig`: `@ConditionalOnProperty(prefix
+Das zentrale Muster: `@ConditionalOnProperty(prefix
 = "{{app}}.db", name = "url")` auf der Konfigurationsklasse. Fehlt die
 Property, entsteht kein einziger Bean dieser Klasse — die Kernanwendung
 startet trotzdem, der Datenbank-Teil bleibt einfach funktionslos. Das ist die
@@ -49,8 +47,8 @@ mit auf jede Bean, die von der DataSource abhängt (Repository-Beans
 eingeschlossen), nicht nur auf die DataSource selbst.
 
 Spring Boots eigene DataSource-/Flyway-Autoconfiguration ist dabei in der
-Hauptanwendungsklasse des Zielprojekts abzuschalten (in der
-Referenzimplementierung über `exclude` in `@SpringBootApplication`) — sonst konkurriert sie mit dem
+Hauptanwendungsklasse des Zielprojekts abzuschalten (über `exclude` in
+`@SpringBootApplication`) — sonst konkurriert sie mit dem
 manuellen Wiring hier. Dieses Modul erzeugt diese Ausschluss-Zeile nicht
 selbst, weil sie in der Hauptklasse des Zielprojekts steht, die dieses Modul
 nicht besitzt; der Generator-Skill muss sie beim Einspielen ergänzen.
@@ -76,14 +74,14 @@ Siehe `docs/muster-db-adapter.md`.
 
 - Ob der Generator-Skill `{{DB_SCHEMA_LABEL}}` immer setzt oder auch ein
   Projekt ohne Fachbereichs-Unterverzeichnis unterstützen soll (Migrationen
-  direkt unter `classpath:db/migration`), ist hier nicht entschieden — beide
-  Varianten kommen in der Referenzimplementierung nicht nebeneinander vor
-  (dort gibt es nur `db/league/migration`, weil es bislang nur einen
-  Datenbank-nutzenden Fachbereich gibt).
-- Ob Nutzername/Passwort immer als eigene Properties existieren oder auch
-  vollständig in der JDBC-URL stehen dürfen (wie es `ExampleDatabaseConfig`
-  mit leeren Strings als Default zulässt), ist bewusst so übernommen wie im
-  Original — keine eigene Erweiterung.
+  direkt unter `classpath:db/migration`), ist hier bewusst offengelassen —
+  beide Varianten sind mit dem Muster vereinbar, aber nur eine ist im
+  Template ausformuliert.
+- Nutzername/Passwort können als eigene Properties existieren oder
+  vollständig in der JDBC-URL stehen (`ExampleDatabaseConfig` lässt dafür
+  leere Strings als Default zu) — dieses Modul trifft hier bewusst keine
+  Vorgabe.
 - Dieses Modul nimmt keine Aussage zu Connection-Pool-Feineinstellungen
-  (Pool-Größe, Timeouts) vor, weil die Referenzimplementierung selbst keine
-  über die Hikari-Defaults hinaus setzt.
+  (Pool-Größe, Timeouts) vor und belässt es bei den Hikari-Defaults; das
+  liegt außerhalb des Scopes dieses Moduls, weil sinnvolle Werte stark vom
+  Lastprofil des jeweiligen Projekts abhängen.

@@ -1,11 +1,10 @@
 # quality-gates
 
-Liefert das, was aus der Referenzimplementierung heraus den
-Unterschied zwischen einer Konvention und einem Gate macht: Mutationstests
-(Pitest) auf gezielt ausgewählten, kritischen Klassen, und ein einziger
-JGiven-Report über alle Test-Ebenen hinweg.
+Liefert das, was den Unterschied zwischen einer Konvention und einem Gate
+macht: Mutationstests (Pitest) auf gezielt ausgewählten, kritischen
+Klassen, und ein einziger JGiven-Report über alle Test-Ebenen hinweg.
 
-Kernaussage, wörtlich aus der Referenzimplementierung übernommen (`CLAUDE.md`):
+Kernaussage dieses Moduls:
 
 > Ein übersprungener Skill ist kein Beinbruch, ein übersprungenes Gate gibt
 > es nicht.
@@ -23,7 +22,7 @@ Existenz eine erzwungene Eigenschaft des Builds macht.
 | Datei/Ordner | Zweck |
 |---|---|
 | `build.gradle.fragment.kts` | Pitest-Plugin + Konfiguration (Zielklassen über eine Kritikalitäts-Annotation, siehe unten), JGiven-Report-Wiring über mehrere Test-Tasks. Beides hängt explizit an `check`. |
-| `docs/gates-uebersicht.md` | Tabelle: welches Gate prüft was, greift immer, Referenz auf die Referenzimplementierung als Beispiel. |
+| `docs/gates-uebersicht.md` | Tabelle: welches Gate prüft was und greift immer. |
 
 ## Abhängigkeit zu anderen Modulen
 
@@ -38,12 +37,11 @@ Existenz eine erzwungene Eigenschaft des Builds macht.
 
 ## Mutationstests: Zielklassenauswahl
 
-Die Referenzimplementierung leitet die Pitest-Zielklassen aus einer selbst
-geschriebenen `@Criticality(HIGH)`-Annotation ab (Reflection über die
-kompilierten Klassen, keine Textsuche, keine zweite handgepflegte Liste,
-die still veraltet). Dieses Modul generalisiert das Prinzip, ohne die
-dortigen Kritikalitätsstufen (LOW/MEDIUM/HIGH) oder Klassennamen zu
-übernehmen:
+Die Pitest-Zielklassen werden über eine eigene `@Criticality(HIGH)`-Annotation
+ausgewählt (Reflection über die kompilierten Klassen, keine Textsuche,
+keine zweite handgepflegte Liste, die still veraltet). Die konkreten
+Kritikalitätsstufen (LOW/MEDIUM/HIGH) und Klassennamen sind dabei
+Projektentscheidungen, nur das Prinzip ist generalisiert:
 
 - `build.gradle.fragment.kts` erwartet eine Annotation
   `{{PACKAGE_BASE}}.criticality.Critical` (Platzhalter, siehe unten) mit
@@ -51,10 +49,9 @@ dortigen Kritikalitätsstufen (LOW/MEDIUM/HIGH) oder Klassennamen zu
   konfigurierten Pitest-Level (Gradle-Property `pitestLevel`, Default
   `HIGH`) per Reflection aus den kompilierten `main`-Klassen ein.
 - Eine leere Zielmenge bricht den Build ab (`GradleException`) statt still
-  einen wirkungslosen Pitest-Lauf zuzulassen — derselbe Fehlermodus, den
-  die Referenzimplementierung an dieser Stelle ausdrücklich vermeidet
-  (Kommentar im Referenz-`build.gradle.kts`, Abschnitt „Mutationstests auf
-  den HIGH-Klassen").
+  einen wirkungslosen Pitest-Lauf zuzulassen — ein wirkungsloser Lauf wäre
+  ein grünes Gate, das nichts prüft, und damit schlimmer als gar kein
+  Gate.
 - `includedGroups` filtert auf die Tags `unit`/`port` (aus
   `backend-java-onion`) — kein Spring, kein Socket, kein Reportschreiben
   während der Mutation, sonst wird der Lauf unbenutzbar.
@@ -68,8 +65,7 @@ eine Empfehlung aussehen könnte, ohne am echten Projekt kalibriert zu sein.
 
 ## JGiven-Report über alle Ebenen
 
-Wie in der Referenzimplementierung: Jeder der aus `backend-java-onion` übernommenen
-Test-Tasks (`test`, `adapterTest`, `apiTest`) bekommt denselben
+Jeder der Test-Tasks aus `backend-java-onion` (`test`, `adapterTest`, `apiTest`) bekommt denselben
 `resultsDir` für sein JGiven-`JGivenTaskExtension`, und ein einziger
 `jgivenTestReport`-Task liest von dort — ein Report mit allen Szenarien
 aus allen Ebenen, statt drei getrennten. `archTest` bleibt bewusst außen
@@ -89,27 +85,28 @@ Platzhalter (`{{...}}`):
 ## Nicht Teil dieses Moduls
 
 - **`commit-msg`-Hook, Ausnahmenregister, Protokollvertrag/Vertragstest,
-  Feature-Dokument-Pflichtformat** — diese Muster existieren in der
-  Referenzimplementierung, sind hier aber bewusst nicht aufgenommen (an
-  anderer Stelle bereits vorhanden). Wer sie braucht, orientiert sich am
-  Original in der Referenzimplementierung
-  (`.githooks/commit-msg`, `ci/commit-format-pruefen.sh`,
-  `ausnahmenregister`-Task, `protokollvertrag`/`protokollvertragLiga`,
-  `featuredoku`).
+  Feature-Dokument-Pflichtformat** — diese Muster sind sinnvolle,
+  ergänzende Gates, liegen aber außerhalb des Scopes dieses Moduls: sie
+  hängen an projektspezifischen Formaten (Commit-Konventionen,
+  Ausnahmenregister-Format, Protokoll-/Feature-Dokumentstruktur), die
+  dieses Modul nicht vorgibt. Wer sie braucht, richtet sich einen eigenen
+  Hook/Task nach demselben Prinzip ein: ein Skript oder ein Gradle-Task,
+  der an `check` hängt und den Build hart abbricht, wenn die Konvention
+  verletzt ist.
 
 ## Offene Anmerkungen
 
 - `abdeckung` (Feature-Abdeckung gegen ein Anforderungsregister) und
-  `abdeckungFrontend` (dieselbe Messung fürs Frontend) sind in der
-  Referenzimplementierung ebenfalls nicht überspringbare Gates, hängen aber an einem bestimmten
+  `abdeckungFrontend` (dieselbe Messung fürs Frontend) sind sinnvolle,
+  nicht überspringbare Gates, hängen aber an einem bestimmten
   Anforderungsdokument-Format (`docs/anforderungen.md`, Anhang A) bzw. an
   `frontend-react-vite`. `abdeckungFrontend` ist laut Aufgabenstellung
   Bestandteil von `frontend-react-vite`; `abdeckung` (Backend-Fassung) ist
   keinem der drei Module hier eindeutig zugeordnet — dieses Modul
   übernimmt es nicht, um keine Überschneidung zu riskieren. Das ist eine
   bewusste Lücke, keine übersehene.
-- Die Ebenen-Disjunktheit (`ebenenDisjunktheit` in der Referenzimplementierung: kein
-  Adapter-/API-Test darf eine Domänenzeile abdecken, die kein
-  unit-/port-Test selbst erreicht) hängt an den JaCoCo-Reports der
-  Onion-Test-Ebenen aus `backend-java-onion` und gehört inhaltlich eher
-  dorthin. Hier nur als Querverweis erwähnt, nicht implementiert.
+- Die Ebenen-Disjunktheit (kein Adapter-/API-Test darf eine Domänenzeile
+  abdecken, die kein unit-/port-Test selbst erreicht) hängt an den
+  JaCoCo-Reports der Onion-Test-Ebenen aus `backend-java-onion` und gehört
+  inhaltlich eher dorthin. Hier nur als Querverweis erwähnt, nicht
+  implementiert.

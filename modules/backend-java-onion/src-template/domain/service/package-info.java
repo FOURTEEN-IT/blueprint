@@ -1,6 +1,6 @@
 /**
  * Domain Services: reine Funktionen, die zu keiner einzelnen Entity
- * gehoeren (Referenzbeispiel: {@code Settlement} in der Referenzimplementierung).
+ * gehoeren (z. B. eine Berechnung, die mehrere Aggregate einbezieht).
  * {@code @Service}-Typen sind zustandslos —
  * {@code ArchitectureTest.domainServicesSindZustandslos} prueft das.
  */

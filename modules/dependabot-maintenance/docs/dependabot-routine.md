@@ -128,6 +128,3 @@ Harte Grenzen:
 - Niemals force-pushen, Branch-Protection aendern oder andere offene PRs anfassen.
 - Bei Unsicherheit, ob eine Aenderung mechanisch ist oder eine echte Designentscheidung braucht: als nicht loesbar behandeln (Schritt 6), nie raten und trotzdem mergen.
 ```
-
-*Referenzimplementierung: Ursprungsprojekt, `docs/dependabot-routine.md`,
-Routine „Merge critical Dependabot PRs using OpenRewrite".*

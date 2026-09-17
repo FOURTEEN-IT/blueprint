@@ -55,9 +55,9 @@ gradle bootJar && java -jar build/libs/{{PROJECT_NAME}}-0.1.0.jar
 
 ## Offene Erweiterung
 
-Ein Abdeckungs-Gate wie Watchparties `abdeckungFrontend` (gleicht
+Ein Abdeckungs-Gate wie ein `abdeckungFrontend`-Task (gleicht
 frontend-markierte Anforderungs-IDs gegen `requirement(...)`-Aufrufe ab)
 ist nicht Teil dieses Moduls, weil es ein eigenes, projektspezifisches
 Anforderungsdokument mit fester Tabellenform voraussetzt. Siehe
 `docs/frontend-testebene.md` und `build.gradle.fragment.kts` fuer die
-Begruendung und einen Verweis auf die Vorlage in der Referenzimplementierung.
+Begruendung.

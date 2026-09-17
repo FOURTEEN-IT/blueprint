@@ -16,11 +16,8 @@ import java.util.Optional;
  * eingefuegt, danach per {@code ON CONFLICT ... DO UPDATE} aktualisiert,
  * statt getrennt zwischen "anlegen" und "aendern" zu unterscheiden.
  *
- * Vorbild: adapter/out/db/AccountRepositoryJdbc.java (Referenzimplementierung)
- * -- Struktur und Upsert-Muster von dort uebernommen, ohne dessen konkrete
- * Fachtypen. Beim
- * Einspielen sind {@code ExampleEntity}/{@code ExampleId} durch das echte
- * Domänenmodell zu ersetzen, {@code ExampleRepository} durch dessen
+ * Beim Einspielen sind {@code ExampleEntity}/{@code ExampleId} durch das
+ * echte Domänenmodell zu ersetzen, {@code ExampleRepository} durch dessen
  * Port-Interface unter application/port/out.
  */
 public class ExampleRepositoryJdbc implements ExampleRepository {

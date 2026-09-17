@@ -3,30 +3,30 @@
 Liefert den generischen Deployment-Baustein: Fly.io als Hosting (ein
 Container, eine Instanz, optionales Fly-Volume für persistenten Zustand),
 GitHub Actions für Build/Release/Deploy, und eine eigenständige
-Cloudflare-Vorlage als vorgeschaltete Schicht. Kein Fachcode aus der
-Referenzimplementierung — nur das Gerüst.
+Cloudflare-Vorlage als vorgeschaltete Schicht. Kein Fachcode — nur das
+Gerüst.
 
-## Herkunft, ehrlich getrennt
+## Umfang
 
-| Teil | Herkunft |
+| Teil | Zweck |
 |---|---|
-| `template/fly.toml.template` | Generalisiert aus der Referenzimplementierung (`fly.toml`), inklusive der Kommentare zu ADR-005/ADR-018 |
-| `template/Dockerfile.template` | Generalisiert aus der Referenzimplementierung (`Dockerfile`) |
-| `template/.github/workflows/build.yml.template` | Generalisiert aus der Referenzimplementierung (`.github/workflows/build.yml`), E2E- und Commit-Format-Schritte als auskommentierte Beispiele, weil sie projekteigene Skripte/Ebenen voraussetzen, die dieses Modul nicht mitliefert |
-| `template/.github/workflows/release.yml.template` | Generalisiert aus der Referenzimplementierung (`.github/workflows/release.yml`); der GitHub-Pages-Job (JGiven-Bericht) ist **nicht** übernommen, weil er an deren eigene Testebene hängt |
-| `template/.releaserc.json` | Unverändert aus der Referenzimplementierung übernommen (semantic-release-Konfiguration ist bereits generisch, nur `branches` ist ein Platzhalter) |
-| `docs/cloudflare-setup.md` | **Keine Herkunft aus der Referenzimplementierung.** Diese setzt bewusst **kein** Cloudflare ein (ADR-018 verwirft einen vorgeschalteten Proxy ausdrücklich, DNS liegt dort direkt bei IONOS). Das Dokument ist eine eigenständig verfasste Vorlage für Projekte, die einen Grund für Cloudflare haben, den die Referenzimplementierung nicht hat — im Dokument selbst noch einmal so gekennzeichnet |
+| `template/fly.toml.template` | Fly.io-Konfiguration, inklusive Kommentaren zu den Architekturentscheidungen ADR-005/ADR-018 |
+| `template/Dockerfile.template` | Multi-Stage-Dockerfile für Frontend- und Backend-Build |
+| `template/.github/workflows/build.yml.template` | CI-Workflow; E2E- und Commit-Format-Schritte sind als auskommentierte Beispiele hinterlegt, weil sie projekteigene Skripte/Ebenen voraussetzen, die dieses Modul nicht mitliefert |
+| `template/.github/workflows/release.yml.template` | CD-Workflow; ein optionaler GitHub-Pages-Job für Testberichte ist **nicht** enthalten, weil er eine bestimmte Testebene voraussetzt (siehe unten) |
+| `template/.releaserc.json` | semantic-release-Konfiguration, bereits generisch gehalten (nur `branches` ist ein Platzhalter) |
+| `docs/cloudflare-setup.md` | Eigenständige Vorlage für Projekte, die einen Grund für Cloudflare haben. Diese Fly.io-Vorlage selbst setzt bewusst **kein** Cloudflare ein (ADR-018 verwirft einen vorgeschalteten Proxy ausdrücklich, DNS liegt direkt beim Registrar) — im Dokument selbst noch einmal so gekennzeichnet |
 
-Nicht übernommen: `schedule-relay.yml` (aus der Referenzimplementierung). Der tägliche
-GitHub-Actions-Relay dort ist fachspezifisch (ESPN-Feed für das
-Tippspiel), zeigt aber ein generalisierbares **Muster**, das dieses Modul
-nicht als Code, sondern nur als Hinweis mitgibt (siehe unten).
+Bewusst nicht Teil dieses Moduls: ein täglicher GitHub-Actions-Relay-Job
+für einen externen, fachspezifischen Datenfeed. Das zugrunde liegende
+Muster ist generalisierbar und wird unten als Hinweis mitgegeben, ohne
+den fachspezifischen Code selbst.
 
 ## Warum Fly.io (Kontext für diese Wahl)
 
-Dieses Modul passt zu Anwendungen, die dieselbe Architekturentscheidung wie
-die Referenzimplementierung treffen: **genau eine Server-Instanz, kein
-Autoscaling, kein Sharding** (harte Invariante 6, CLAUDE.md). Der Grund ist nicht
+Dieses Modul passt zu Anwendungen mit derselben Architekturentscheidung:
+**genau eine Server-Instanz, kein Autoscaling, kein Sharding** (harte
+Invariante 6, CLAUDE.md). Der Grund ist nicht
 Sparsamkeit, sondern Korrektheit: Sobald Zustand im Arbeitsspeicher lebt
 (WebSocket-Sitzungen, ein In-Memory-Aggregat, ein Actor-Loop) und nicht
 über mehrere Instanzen hinweg konsistent gehalten wird, wären zwei
@@ -40,7 +40,7 @@ falschen landen. Fly.io passt dazu, weil:
   bei fester Kostenkontrolle über die VM-Größe.
 - **Ein Fly-Volume** deckt den Fall ab, dass zumindest ein Snapshot des
   Zustands einen Neustart *innerhalb* einer laufenden Sitzung überleben
-  soll (Vorbild in der Referenzimplementierung: ADR-023) — kein Ersatz für eine echte Datenbank
+  soll (ADR-023) — kein Ersatz für eine echte Datenbank
   (siehe Modul `persistence-postgres-flyway`, falls dauerhafte Persistenz
   gebraucht wird), nur ein Abzug für den Fall eines Absturzes oder
   Deploys am selben Abend/derselben Sitzung.
@@ -96,9 +96,9 @@ Einheitlich über alle Fragmente (`{{...}}`):
   projekteigenen Prüfskripten; die zugehörigen Schritte in
   `release.yml.template`/`build.yml.template` sind deshalb auskommentiert
   statt aktiv, weil dieses Modul die Skripte selbst nicht mitliefert (kein
-  Fachcode). Wer sie braucht, schreibt sie analog zur Referenzimplementierung
-  (`ci/eine-maschine-pruefen.sh`, `ci/rauchtest.mjs`,
-  `ci/commit-format-pruefen.sh`) für das eigene Projekt.
+  Fachcode). Wer sie braucht, schreibt sie für das eigene Projekt, z. B. als
+  `ci/eine-maschine-pruefen.sh`, `ci/rauchtest.mjs` und
+  `ci/commit-format-pruefen.sh`.
 - `docs/cloudflare-setup.md`: `{{SUBDOMAIN}}`, `{{DOMAIN}}`,
   `{{PAGES_PROJECT}}`.
 
@@ -109,28 +109,24 @@ Einheitlich über alle Fragmente (`{{...}}`):
   `GITHUB_TOKEN` (von GitHub Actions automatisch bereitgestellt).
 - **Ein Fly-Postgres oder eine andere Datenbank** ist nicht Teil dieses
   Moduls — siehe `persistence-postgres-flyway`.
-- **Der GitHub-Pages-Job aus der Referenzimplementierung** (Veröffentlichung eines
-  Testberichts) ist nicht übernommen, weil er an eine spezifische
-  Testebene (JGiven) hängt, die dieses Modul nicht voraussetzt. Wer einen
-  Testbericht veröffentlichen will, kann das Muster (eigener Job im selben
-  Workflow, `needs: build`, `actions/deploy-pages`) übertragen.
+- **Ein GitHub-Pages-Job zur Veröffentlichung eines Testberichts** ist
+  bewusst nicht Teil dieses Moduls, weil er eine spezifische Testebene
+  voraussetzt, die nicht jedes Projekt hat. Wer einen Testbericht
+  veröffentlichen will, kann das Muster (eigener Job im selben Workflow,
+  `needs: build`, `actions/deploy-pages`) übertragen.
 
-## Ein Muster aus der Referenzimplementierung, nicht übernommen als Code
+## Ergänzendes Muster: externer Dienst blockiert Rechenzentrums-IPs
 
-Deren `schedule-relay.yml` löst ein Problem, das über Fly.io
-hinausgeht: Ein externer Dienst (dort: der ESPN-Feed) blockiert Zugriffe
-aus dem Fly.io-IP-Bereich (Akamai-Bot-Abwehr gegen Rechenzentrums-Adressen,
-ADR-037-Nachtrag). Statt eines internen, selbst geplanten Jobs auf der
-Fly-Instanz ruft dort ein täglicher GitHub-Actions-Workflow den externen
-Dienst von einem GitHub-Runner ab (anderes Netz) und reicht die Antwort an
-einen Relay-Endpunkt der Anwendung weiter.
+Manche externen Dienste blockieren Zugriffe aus Rechenzentrums-IP-Bereichen
+wie dem von Fly.io (z. B. Bot-Abwehr gegen Rechenzentrums-Adressen). Statt
+eines internen, selbst geplanten Jobs auf der Fly-Instanz kann dann ein
+täglicher/periodischer GitHub-Actions-Cronjob die Daten von einem
+GitHub-Runner (anderes Netz) abrufen und über einen eigenen,
+tokengeschützten Endpunkt an die Anwendung weiterreichen.
 
 Das ist als **Muster** generell brauchbar, sobald eine Zielumgebung
 (Fly.io oder sonst ein Rechenzentrums-IP-Bereich) von einem externen
-Dienst geblockt wird: ein täglicher/periodischer GitHub-Actions-Cronjob
-als Ersatz für einen internen Scheduler, der Daten von außerhalb abruft
-und über einen eigenen, tokengeschützten Endpunkt an die Anwendung
-weiterreicht. Der konkrete Fachcode (ESPN, Spieltage, Saison) ist bewusst
-nicht Teil dieses Moduls — wer das Muster braucht, schreibt den Relay für
-den eigenen externen Dienst analog zur Referenzimplementierung
-(`.github/workflows/schedule-relay.yml`) selbst.
+Dienst geblockt wird. Der konkrete Fachcode für den jeweiligen externen
+Dienst ist bewusst nicht Teil dieses Moduls — wer das Muster braucht,
+schreibt den Relay als eigenen GitHub-Actions-Workflow für den eigenen
+externen Dienst selbst.
