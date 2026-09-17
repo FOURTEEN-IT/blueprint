@@ -1,0 +1,76 @@
+name: Build & Test
+
+# Laeuft auf jedem Push und jeder Pull Request, damit ein roter Test sichtbar
+# wird, bevor er ueberhaupt die Chance hat, auf {{MAIN_BRANCH}} zu landen.
+# Referenz: Watchparty (build.yml).
+
+on:
+  # {{MAIN_BRANCH}} ausgenommen: release.yml.template deckt den Hauptzweig
+  # bereits per workflow_call ab -- ein eigener push-Trigger hier wuerde
+  # denselben Commit ein zweites Mal komplett durchlaufen lassen.
+  # dependabot/** ausgenommen aus demselben Grund: Dependabot pusht auf
+  # seinen eigenen Branch und eroeffnet sofort eine PR fuer denselben Commit.
+  push:
+    branches-ignore: [{{MAIN_BRANCH}}, "dependabot/**"]
+  pull_request:
+  # Erlaubt release.yml.template, diesen Workflow als Job einzuhaengen
+  # (workflow_call statt einer zweiten Testdefinition).
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # Optional, nur mit quality-gates-Modul bzw. eigener Commit-Format-
+      # Pruefung: Der Typ der Commit-Betreffzeile kann ueber Release und
+      # Deploy entscheiden (Conventional Commits + semantic-release). Ohne
+      # eigenes Pruefskript diesen Schritt entfernen.
+      # - name: Commit-Format
+      #   run: |
+      #     {{COMMIT_FORMAT_CHECK_SCRIPT}} \
+      #       "${{ github.event.pull_request.base.sha || github.event.before }}" \
+      #       "${{ github.event.pull_request.head.sha || github.sha }}"
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "{{JAVA_VERSION}}"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "{{NODE_VERSION}}"
+          cache: npm
+          cache-dependency-path: {{FRONTEND_DIR}}/package-lock.json
+
+      - name: Frontend bauen
+        working-directory: {{FRONTEND_DIR}}
+        run: |
+          npm ci
+          npm run build
+
+      - name: check
+        run: ./gradlew check -P{{SKIP_FRONTEND_GRADLE_PROPERTY}}
+
+      # E2E-Ebene (falls vorhanden) bewusst als eigene Stufe: ein Budget von
+      # z. B. zehn Minuten fuer `check` haelt sonst ein Browser-Durchlauf
+      # nicht ein. Abschnitt entfernen, falls es keine E2E-Ebene gibt.
+      # - name: Browser fuer E2E
+      #   working-directory: {{E2E_DIR}}
+      #   run: |
+      #     npm ci
+      #     npx playwright install --with-deps chromium
+      #
+      # - name: E2E
+      #   run: ./gradlew e2eTest
+
+      - name: Testbericht
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-report
+          path: build/reports/tests/test
+          retention-days: 7

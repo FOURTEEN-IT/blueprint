@@ -1,0 +1,184 @@
+#!/usr/bin/env bash
+# Wendet auf einen Major-Versionssprung das passende OpenRewrite-Rezept an.
+#
+# Ohne dieses Skript zieht die Dependabot-Routine einen Major-Sprung von Hand
+# nach: Release Notes lesen, daraus schliessen, was sich geaendert hat, den
+# Code entsprechend anfassen. Das ist genau die Stelle, an der ein
+# Sprachmodell raet. OpenRewrite dreht die Richtung um -- der Hersteller der
+# Bibliothek beschreibt den Umstieg einmal als Rezept, hier wird es nur noch
+# ausgefuehrt. Was das Rezept aendert, ist damit reproduzierbar und nicht
+# interpretiert.
+#
+# Der Katalog unten ist die einzige Stelle, die weiss, welcher Sprung welches
+# Rezept braucht -- und in dieser Vorlage bewusst nur ein Beispiel, kein
+# vollstaendiger Satz. Ein Projekt pflegt hier die Rezepte fuer die
+# Bibliotheken, die es tatsaechlich einsetzt (siehe README dieses Moduls,
+# Abschnitt "Katalog pflegen"). Ein Sprung ohne Eintrag ist kein Fehler,
+# sondern eine Auskunft (Exit 4) -- dann bleibt es bei der Handarbeit der
+# Routine.
+#
+# Aufruf:
+#   ci/openrewrite-anwenden.sh [--trocken|--nur-rezepte] < spruenge.txt
+#
+# Eingabe auf stdin, eine Zeile je Versionssprung der Dependabot-PR:
+#   <koordinate> <vonVersion> <nachVersion>
+# Beispiel:
+#   org.junit.jupiter 5.12.2 6.0.3
+#
+# Optionen:
+#   --trocken       rewriteDryRun statt rewriteRun -- schreibt nichts, legt den
+#                   Patch unter build/reports/rewrite/rewrite.patch ab
+#   --nur-rezepte   nur die aufgeloesten Rezeptnamen ausgeben, kein Gradle-Lauf
+#
+# Exit-Codes:
+#   0  Rezept(e) angewandt bzw. trocken durchgerechnet
+#   4  kein Major-Sprung dabei oder kein Rezept im Katalog -- die Routine
+#      macht dann weiter wie bisher (Release Notes lesen, von Hand anpassen)
+#   1  Fehler (falscher Aufruf, roter Gradle-Lauf)
+
+set -uo pipefail
+
+modus="anwenden"
+case "${1:-}" in
+    --trocken) modus="trocken" ;;
+    --nur-rezepte) modus="nur-rezepte" ;;
+    "") ;;
+    *) echo "Unbekannte Option: $1" >&2; exit 1 ;;
+esac
+
+cd "$(dirname "$0")/.."
+
+# --- Der Katalog ----------------------------------------------------------
+#
+# Zugeordnet wird ueber die *Gruppe* (den Teil vor dem ersten Doppelpunkt) und
+# den Ziel-Major. Das genuegt, weil Dependabot fuer ein Gradle-Projekt
+# entweder die Plugin-ID oder die volle Koordinate meldet -- beide fuehren
+# auf dieselbe Gruppe und dasselbe Rezept.
+#
+# Rezeptnamen gegen die tatsaechlich veroeffentlichte Rezeptsammlung pruefen
+# (siehe build.gradle.fragment.kts dieses Moduls fuer die rewrite-recipe-bom-
+# Version), nicht aus der Dokumentation abschreiben -- ein Tippfehler faellt
+# sonst erst im Gradle-Lauf auf.
+rezepte_fuer() {
+    local gruppe="$1" ziel_major="$2"
+    case "$gruppe:$ziel_major" in
+        # Beispiel: JUnit 5 -> 6.
+        org.junit.jupiter:6|org.junit.platform:6|org.junit:6)
+            echo "org.openrewrite.java.testing.junit6.JUnit5to6Migration" ;;
+        # Beispiel: ArchUnit 0 -> 1 (nur mit Modul backend-java-onion).
+        com.tngtech.archunit:1)
+            echo "org.openrewrite.java.testing.archunit.ArchUnit0to1Migration" ;;
+        # Beispiel: Testcontainers 1 -> 2 (nur mit Modul
+        # persistence-postgres-flyway).
+        org.testcontainers:2)
+            echo "org.openrewrite.java.testing.testcontainers.Testcontainers2Migration" ;;
+        # Weitere Eintraege hier ergaenzen -- siehe README, "Katalog
+        # pflegen".
+        *)
+            return 1 ;;
+    esac
+}
+
+# Erste Zahlenkomponente einer Version. Vertraegt fuehrendes "v" (Actions-Tags
+# heissen v7, nicht 7) und Zusaetze wie "4.0.0-RC1".
+major_von() {
+    printf '%s' "$1" | sed -E 's/^[vV]//' | sed -E 's/[^0-9].*$//'
+}
+
+rezepte=()
+ohne_rezept=()
+kein_major=()
+
+while read -r koordinate von nach _rest; do
+    [ -z "${koordinate:-}" ] && continue
+    case "$koordinate" in \#*) continue ;; esac
+    if [ -z "${von:-}" ] || [ -z "${nach:-}" ]; then
+        echo "Zeile ohne beide Versionen: $koordinate ${von:-} ${nach:-}" >&2
+        exit 1
+    fi
+
+    major_von="$(major_von "$von")"
+    major_nach="$(major_von "$nach")"
+    if [ -z "$major_von" ] || [ -z "$major_nach" ]; then
+        echo "Version nicht lesbar: $koordinate $von -> $nach" >&2
+        exit 1
+    fi
+
+    if [ "$major_von" = "$major_nach" ]; then
+        kein_major+=("$koordinate $von -> $nach")
+        continue
+    fi
+
+    gruppe="${koordinate%%:*}"
+    if gefunden="$(rezepte_fuer "$gruppe" "$major_nach")"; then
+        while read -r rezept; do
+            [ -z "$rezept" ] && continue
+            # Doppelte Nennung vermeiden: zwei Artefakte derselben Gruppe in
+            # einer PR ergeben ein Rezept, nicht zwei.
+            schon_da=""
+            for vorhanden in ${rezepte[@]+"${rezepte[@]}"}; do
+                [ "$vorhanden" = "$rezept" ] && schon_da="ja"
+            done
+            [ -z "$schon_da" ] && rezepte+=("$rezept")
+        done <<< "$gefunden"
+    else
+        ohne_rezept+=("$koordinate $von -> $nach (Gruppe $gruppe, Ziel-Major $major_nach)")
+    fi
+done
+
+if [ ${#kein_major[@]} -gt 0 ]; then
+    echo "Kein Major-Sprung, nichts umzuschreiben:"
+    printf '  - %s\n' "${kein_major[@]}"
+fi
+
+if [ ${#ohne_rezept[@]} -gt 0 ]; then
+    echo "Major-Sprung ohne Eintrag im Katalog (bleibt Handarbeit):"
+    printf '  - %s\n' "${ohne_rezept[@]}"
+fi
+
+if [ ${#rezepte[@]} -eq 0 ]; then
+    echo "Kein Rezept anzuwenden."
+    exit 4
+fi
+
+echo "Rezepte:"
+printf '  - %s\n' "${rezepte[@]}"
+
+if [ "$modus" = "nur-rezepte" ]; then
+    exit 0
+fi
+
+liste="$(IFS=,; printf '%s' "${rezepte[*]}")"
+aufgabe="rewriteRun"
+[ "$modus" = "trocken" ] && aufgabe="rewriteDryRun"
+
+# {{SKIP_FRONTEND_GRADLE_FLAG}}: Das Rezept fasst Java-, Gradle- und
+# Property-Dateien an, nie ein Frontend -- ohne Modul frontend-react-vite
+# diesen Platzhalter einfach leer lassen.
+#
+# -x compileJava -x compileTestJava ist keine Bequemlichkeit, sondern die
+# Bedingung dafuer, dass dieses Skript ueberhaupt hilft. Die Rezeptaufgabe
+# haengt von Haus aus am Kompilieren -- und ein Major-Sprung, der eine
+# Anpassung erzwingt, hat den Compiler in aller Regel schon rot gemacht. Ohne
+# das Ueberspringen bricht der Lauf mit genau den Fehlern ab, die das Rezept
+# beheben soll. Die Typinformationen holt OpenRewrite aus den Jars des
+# Compile-Classpath, nicht aus den eigenen .class-Dateien; das Ueberspringen
+# kostet also nichts, was das Rezept braucht.
+echo
+echo "./gradlew $aufgabe -PrewriteRezepte=$liste {{SKIP_FRONTEND_GRADLE_FLAG}} -x compileJava -x compileTestJava"
+if ! ./gradlew "$aufgabe" "-PrewriteRezepte=$liste" {{SKIP_FRONTEND_GRADLE_FLAG}} -x compileJava -x compileTestJava; then
+    echo "Gradle-Lauf rot -- kein Rezept angewandt." >&2
+    exit 1
+fi
+
+if [ "$modus" = "trocken" ]; then
+    echo
+    echo "Trockenlauf. Patch (falls vorhanden): build/reports/rewrite/rewrite.patch"
+    exit 0
+fi
+
+echo
+echo "Vom Rezept geaendert:"
+if ! git diff --stat; then
+    exit 1
+fi

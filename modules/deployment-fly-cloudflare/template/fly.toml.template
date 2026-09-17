@@ -1,0 +1,92 @@
+# Deployment-Konfiguration fuer Fly.io.
+#
+# Referenz: Watchparty (fly.toml, ADR-005/ADR-018). Die Werte hier sind keine
+# Tuning-Parameter, sondern die Umsetzung einer bewussten Entscheidung: genau
+# eine Instanz, kein Autoscaling, kein Sharding (siehe README dieses Moduls).
+# Wer sie aendert, aendert diese Entscheidung -- zwei Instanzen waeren zwei
+# getrennte Mengen von Zustand, mit Sitzungen, die zufaellig auf der falschen
+# landen.
+#
+# ACHTUNG: Diese Datei allein reicht nicht. `fly deploy` legt beim ersten
+# Deploy von sich aus eine zweite Maschine fuer High Availability an — auch
+# mit min_machines_running = 1. Deshalb immer mit `--ha=false` deployen und
+# danach `fly machines list` pruefen (automatisiert:
+# template/.github/workflows/release.yml.template ruft dafuer ein
+# Pruefskript auf, siehe README).
+
+app = "{{APP_NAME}}"
+primary_region = "{{FLY_REGION}}"
+
+[build]
+  dockerfile = "Dockerfile"
+
+# Volume fuer persistenten Zustand -- nur einbinden, wenn die Anwendung
+# tatsaechlich etwas auf Platte sichert (z. B. einen Snapshot fuer einen
+# Neustart innerhalb einer laufenden Sitzung, analog zu ADR-023 in
+# Watchparty). Ohne eigenen Zustand auf Platte diesen Abschnitt entfernen.
+# Einmalig anlegen:
+#   fly volumes create {{VOLUME_NAME}} -a {{APP_NAME}} -r {{FLY_REGION}} -s 1
+# Ein Volume haengt an einer Maschine -- das macht die Ein-Instanz-Regel
+# schaerfer statt sie aufzuweichen: Zwei Maschinen haetten dann nicht nur
+# zwei getrennte Zustaende, sondern auch zwei Dateien. --ha=false und
+# `fly machines list` bleiben deshalb Pflicht, siehe oben. Und ehrlich: Ein
+# Volume ueberlebt ein Deploy, aber nicht das Ersetzen der Maschine
+# (Hardware-Ausfall, Regionswechsel) -- eine deutliche Verbesserung, keine
+# Garantie.
+[mounts]
+  source = "{{VOLUME_NAME}}"
+  destination = "{{VOLUME_MOUNT_PATH}}"
+
+[env]
+  # Beispiel: Pfad fuer einen Snapshot-Adapter, falls vorhanden. Leer oder
+  # ungesetzt bedeutet ueblicherweise Persistenz aus -- das ist zugleich ein
+  # Notausschalter: Zeile auskommentieren und neu deployen.
+  # {{SNAPSHOT_ENV_VAR_NAME}} = "{{VOLUME_MOUNT_PATH}}/{{SNAPSHOT_SUBDIR}}"
+
+[http_service]
+  internal_port = {{APP_PORT}}
+  force_https = true
+
+  # Fest eine Instanz, kein Autoscaling.
+  min_machines_running = 1
+
+  # Kein Scale-to-Zero, sofern die Anwendung In-Memory-Zustand haelt, der
+  # eine offene Verbindung ueberlebt (WebSockets, laufende Sitzungen). Fly
+  # stoppt eine Maschine sonst, sobald keine Verbindung mehr offen ist --
+  # z. B. wenn ein Client-Tab suspendiert wird. Die Maschine wuerde anhalten
+  # und mit ihr der komplette Zustand. Fuer eine zustandslose Anwendung kann
+  # dieser Wert auf true stehen; dann ist Scale-to-Zero wieder sinnvoll.
+  auto_stop_machines = false
+
+  # Gegenstueck dazu: sollte eine Maschine doch einmal stehen (Wartung,
+  # Absturz), startet sie beim naechsten Request von selbst wieder.
+  auto_start_machines = true
+
+  # Die Defaults sind auf Verteilung ueber mehrere Instanzen ausgelegt und
+  # liegen im niedrigen zweistelligen Bereich. Bei genau einer Instanz und
+  # dauerhaft offenen Verbindungen (WebSockets) faellt das schnell zu knapp
+  # aus -- deshalb hier bewusst hoch gesetzt. Werte anpassen an die
+  # erwartete Anzahl gleichzeitiger Clients.
+  [http_service.concurrency]
+    type = "connections"
+    soft_limit = {{CONCURRENCY_SOFT_LIMIT}}
+    hard_limit = {{CONCURRENCY_HARD_LIMIT}}
+
+  # Ohne Check sieht Fly nur "Prozess laeuft", nicht "Anwendung antwortet".
+  # Faengt JVM-/Runtime-Absturz, OOM-Kill-Nachwehen und einen haengenden
+  # Embedded-Server ab. Kein Nachweis, dass ein interner Event-Loop/Actor
+  # noch lebt, falls die Anwendung so etwas hat -- dafuer braucht es einen
+  # eigenen Rauchtest nach dem Deploy (siehe release.yml.template).
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "10s"
+    method = "GET"
+    path = "{{HEALTHCHECK_PATH}}"
+
+[[vm]]
+  size = "{{FLY_VM_SIZE}}"
+  # Ausreichend fuer die Runtime waehlen -- zu wenig Speicher fuehrt in
+  # GC-Dauerlast oder in den OOM-Killer. Ein OOM-Kill kostet bei zustands-
+  # behafteten Anwendungen den gesamten In-Memory-Zustand.
+  memory = "{{FLY_VM_MEMORY}}"
