@@ -22,18 +22,21 @@ dieses Modul nur `template/`, der Rest (`build.gradle.fragment.kts`) entfaellt.
 - `docs/frontend-testebene.md` -- Beschreibung der Frontend-Testebene
   (Vitest + Testing Library, "Serverdaten rein, sichtbare Ausgabe raus").
 
-## Platzhalter beim Einspielen
+## Checkliste
 
-- `{{PROJECT_NAME}}` -- in `template/package.json` (Paketname) und
-  `template/index.html`/`template/src/App.jsx` (Titel/Ueberschrift).
-- `{{BACKEND_DEV_PORT}}` -- in `template/vite.config.js`, Dev-Proxy-Ziel.
-  Der Proxy-Block selbst ist ein Beispiel (`/ws` fuer WebSocket, `/api` fuer
-  REST) und an die tatsaechlichen Endpunkte des Zielprojekts anzupassen --
-  ein Projekt ohne WebSocket laesst den `ws`-Block einfach weg.
-
-Der Generator-Skill kopiert `template/` nach `frontend/` im Zielprojekt und
-haengt `build.gradle.fragment.kts` an dessen `build.gradle.kts` an (oder bindet
-es per `apply(from = ...)` ein), bevor er die Platzhalter ersetzt.
+- [ ] `{{PROJECT_NAME}}` gesetzt -- in `template/package.json`
+  (Paketname) und `template/index.html`/`template/src/App.jsx`
+  (Titel/Ueberschrift).
+- [ ] `{{BACKEND_DEV_PORT}}` gesetzt -- in `template/vite.config.js`,
+  Dev-Proxy-Ziel.
+- [ ] Proxy-Block in `template/vite.config.js` an die tatsaechlichen
+  Endpunkte angepasst -- er ist nur ein Beispiel (`/ws` fuer WebSocket,
+  `/api` fuer REST); ein Projekt ohne WebSocket laesst den `ws`-Block
+  einfach weg.
+- [ ] `template/` nach `frontend/` im Zielprojekt kopiert und
+  `build.gradle.fragment.kts` an dessen `build.gradle.kts` angehaengt
+  (oder per `apply(from = ...)` eingebunden), bevor die Platzhalter
+  ersetzt werden.
 
 ## Lokal entwickeln
 

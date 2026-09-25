@@ -82,7 +82,7 @@ Einheitlich über alle Fragmente (`{{...}}`):
   entfernen.
 - `{{SNAPSHOT_ENV_VAR_NAME}}`, `{{SNAPSHOT_SUBDIR}}` — optional, analog.
 - `{{SUBDOMAIN}}`, `{{DOMAIN}}` — nur bei einer eigenen Domain statt
-  `{{APP_NAME}}.fly.dev` (siehe „Was ein Nutzer noch braucht").
+  `{{APP_NAME}}.fly.dev` (siehe „Checkliste").
 - `{{MAIN_BRANCH}}` — Hauptzweig (Beispielwert: `main`).
 - `{{JAVA_VERSION}}`, `{{NODE_VERSION}}` — Toolchain-Versionen.
 - `{{FRONTEND_DIR}}`, `{{E2E_DIR}}` — Verzeichnisse, falls vorhanden.
@@ -99,21 +99,25 @@ Einheitlich über alle Fragmente (`{{...}}`):
   `ci/eine-maschine-pruefen.sh`, `ci/rauchtest.mjs` und
   `ci/commit-format-pruefen.sh`.
 
-## Was ein Nutzer noch braucht
+## Checkliste
 
-- **Secrets:** `FLY_API_TOKEN` (App-gescoped, z. B. über
-  `fly tokens create deploy -a {{APP_NAME}}`); bei Semantic Release reicht
-  `GITHUB_TOKEN` (von GitHub Actions automatisch bereitgestellt).
-- **Ein Fly-Postgres oder eine andere Datenbank** ist nicht Teil dieses
-  Moduls — siehe `persistence-postgres-flyway`.
-- **Ein GitHub-Pages-Job zur Veröffentlichung eines Testberichts** ist
-  bewusst nicht Teil dieses Moduls, weil er eine spezifische Testebene
-  voraussetzt, die nicht jedes Projekt hat. Wer einen Testbericht
-  veröffentlichen will, kann das Muster (eigener Job im selben Workflow,
-  `needs: build`, `actions/deploy-pages`) übertragen.
-- **Eine eigene Domain/Subdomain statt `{{APP_NAME}}.fly.dev`** braucht
-  unabhängig davon, ob zusätzlich ein Proxy davorsteht, zwei manuelle
-  Schritte — dieses Modul löst sie nicht automatisch aus:
+Alle `{{...}}`-Platzhalter aus dem Abschnitt oben gesetzt, plus das, was
+kein Platzhalter automatisch löst:
+
+- [ ] Secret `FLY_API_TOKEN` angelegt (App-gescoped, z. B. über
+  `fly tokens create deploy -a {{APP_NAME}}`) und in GitHub hinterlegt; bei
+  Semantic Release reicht zusätzlich `GITHUB_TOKEN` (von GitHub Actions
+  automatisch bereitgestellt).
+- [ ] Datenbank eingerichtet, falls gebraucht — ein Fly-Postgres oder eine
+  andere Datenbank ist nicht Teil dieses Moduls, siehe
+  `persistence-postgres-flyway`.
+- [ ] GitHub-Pages-Job übertragen, falls ein Testbericht veröffentlicht
+  werden soll (optional) — bewusst nicht Teil dieses Moduls, weil er eine
+  spezifische Testebene voraussetzt, die nicht jedes Projekt hat. Muster:
+  eigener Job im selben Workflow, `needs: build`, `actions/deploy-pages`.
+- [ ] Eigene Domain eingerichtet, falls nicht `{{APP_NAME}}.fly.dev`
+  reicht (optional) — unabhängig davon, ob zusätzlich ein Proxy davorsteht,
+  zwei Schritte, die dieses Modul nicht automatisch auslöst:
   1. Beim Registrar (oder DNS-Anbieter) einen `CNAME`-Eintrag für
      `{{SUBDOMAIN}}` auf `{{APP_NAME}}.fly.dev` anlegen.
   2. `fly certs add {{SUBDOMAIN}}.{{DOMAIN}} -a {{APP_NAME}}` ausführen,
@@ -126,6 +130,10 @@ Einheitlich über alle Fragmente (`{{...}}`):
   Wer zusätzlich einen Proxy/CDN vorschalten will (z. B. für DDoS-Schutz
   oder ein getrennt deploytes Frontend), löst das über dessen eigene
   Anleitung; dieses Modul macht dazu keine Vorgabe.
+- [ ] `--ha=false` beim ersten Deploy verwendet und `fly machines list`
+  danach geprüft (oder das automatisierte Prüfskript aus
+  `{{SINGLE_MACHINE_CHECK_SCRIPT}}` eingebunden) — Fly legt sonst
+  eigenmächtig eine zweite Maschine an (siehe oben).
 
 ## Ergänzendes Muster: externer Dienst blockiert Rechenzentrums-IPs
 

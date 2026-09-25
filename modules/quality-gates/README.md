@@ -74,13 +74,16 @@ diesen Ordner (eine Abhängigkeit darauf wäre ein Validierungsfehler ohne
 Gegenwert — Gradle bemängelt sonst eine „implicit dependency" auf ein
 Verzeichnis, das der Task nie befüllt).
 
-## Was ein Nutzer anpassen muss
+## Checkliste
 
-Platzhalter (`{{...}}`):
-
-- `{{PACKAGE_BASE}}` — Basispaket für die Kritikalitäts-Annotation.
-- `{{PITEST_MUTATION_THRESHOLD}}` — Mindest-Mutation-Score in Prozent, am
-  echten Projekt kalibriert, keine Vorgabe dieses Moduls.
+- [ ] `{{PACKAGE_BASE}}` gesetzt — Basispaket für die
+  Kritikalitäts-Annotation.
+- [ ] `{{PITEST_MUTATION_THRESHOLD}}` gesetzt — Mindest-Mutation-Score in
+  Prozent, am echten Projekt kalibriert, keine Vorgabe dieses Moduls.
+- [ ] Kritikalitäts-Annotation `{{PACKAGE_BASE}}.criticality.Critical`
+  (mit `level()`-Methode und Enum-Stufen, siehe oben) im Zielprojekt
+  angelegt — ohne sie findet Pitest keine Zielklassen und der Build bricht
+  ab.
 
 ## Nicht Teil dieses Moduls
 

@@ -17,32 +17,31 @@ das Gerüst, keine Domäne.
 | `docs/adr-026-jspecify-nullness.md` | ADR-Vorlage: Nullness über NullAway. |
 | `docs/adr-027-jmolecules-stereotypen.md` | ADR-Vorlage: DDD-Stereotypen + Ring-Annotationen. |
 
-## Was ein Nutzer anpassen muss
+## Checkliste
 
 Platzhalter in allen Fragmenten (`{{...}}`), einheitlich über das ganze
-Modul:
+Modul, plus die Schritte, die kein Platzhalter automatisch löst:
 
-- `{{PACKAGE_BASE}}` — Basispaket, z. B. `de.example.projectname`. Wird zu
-  Verzeichnissen unter `src/main/java/` und `src/test/java/`; überall dort,
-  wo im Zielprojekt sonst ein konkretes Basispaket stünde, steht
-  hier dieser Platzhalter.
-- `{{PROJECT_NAME}}` — Gradle `group`/Anzeigename, in Kommentaren und im
-  Feature-losen Beispielcode.
-- `{{JAVA_VERSION}}` — Toolchain-Version (Beispielwert: 25). Ein neues Projekt
-  kann eine ältere LTS-Version wählen; die restlichen Fragmente sind davon
-  unabhängig.
-- `{{ADDITIONAL_ADAPTER_PORTS}}` — Zeile(n) in `onionArchitecture()...
-  .adapter(...)` je nach tatsächlich vorhandenen Adaptern (`ws`, `http`,
-  `file`, `db`, ...). Ohne mindestens einen Adapter-Ring meldet ArchUnit
-  eine leere Architektur.
-- Die Ausnahmeliste `TYPEN_OHNE_DDD_BAUSTEIN` in
-  `ArchitectureTest.java.template` — anfangs leer; ein Typ kommt nur mit
-  Begründung dazu (siehe ADR-027-Vorlage), nicht stillschweigend.
-
-Nach dem Einspielen ist das Beispiel-Trio (`ExampleAggregate`,
-`ExampleEntity`, `ExampleId`) ein Wegwerf-Nachweis, dass Gerüst und Tests
-zusammenpassen — es wird durch den ersten echten Domänentyp ersetzt, nicht
-daneben stehengelassen.
+- [ ] `{{PACKAGE_BASE}}` gesetzt — Basispaket, z. B. `de.example.projectname`.
+  Wird zu Verzeichnissen unter `src/main/java/` und `src/test/java/`;
+  überall dort, wo im Zielprojekt sonst ein konkretes Basispaket stünde,
+  steht hier dieser Platzhalter.
+- [ ] `{{PROJECT_NAME}}` gesetzt — Gradle `group`/Anzeigename, in
+  Kommentaren und im Feature-losen Beispielcode.
+- [ ] `{{JAVA_VERSION}}` gesetzt — Toolchain-Version (Beispielwert: 25).
+  Ein neues Projekt kann eine ältere LTS-Version wählen; die restlichen
+  Fragmente sind davon unabhängig.
+- [ ] `{{ADDITIONAL_ADAPTER_PORTS}}` ergänzt — Zeile(n) in
+  `onionArchitecture()...adapter(...)` je nach tatsächlich vorhandenen
+  Adaptern (`ws`, `http`, `file`, `db`, ...). Ohne mindestens einen
+  Adapter-Ring meldet ArchUnit eine leere Architektur.
+- [ ] Ausnahmeliste `TYPEN_OHNE_DDD_BAUSTEIN` in
+  `ArchitectureTest.java.template` geprüft — anfangs leer; ein Typ kommt
+  nur mit Begründung dazu (siehe ADR-027-Vorlage), nicht stillschweigend.
+- [ ] Beispiel-Trio (`ExampleAggregate`, `ExampleEntity`, `ExampleId`)
+  durch den ersten echten Domänentyp ersetzt — es ist nur ein
+  Wegwerf-Nachweis, dass Gerüst und Tests zusammenpassen, kein Code, der
+  neben dem echten Fachcode stehen bleibt.
 
 ## Abhängigkeit zu anderen Modulen
 

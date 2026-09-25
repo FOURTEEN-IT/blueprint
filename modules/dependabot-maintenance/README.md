@@ -54,15 +54,24 @@ Major-Sprung hatten). Rezeptnamen immer gegen die tatsächlich
 veröffentlichte Rezeptsammlung prüfen (siehe Versionsangabe in
 `build.gradle.fragment.kts`), nicht aus der Dokumentation abschreiben.
 
-## Was ein Nutzer anpassen muss
+## Checkliste
 
-- `{{MAIN_BRANCH}}`, `{{JAVA_VERSION}}`, `{{CODEQL_CRON}}`,
-  `{{SKIP_FRONTEND_GRADLE_FLAG}}` — in den `.template`-Dateien unter
-  `template/`.
-- Alle Platzhalter in `docs/dependabot-routine.md` — siehe die Liste dort,
-  Abschnitt „Platzhalter in diesem Prompt".
-- Sprachmatrix in `codeql.yml.template` — Einträge entfernen, die nicht zu
-  den gewählten Modulen passen (siehe Kommentare in der Datei).
+- [ ] `{{MAIN_BRANCH}}`, `{{JAVA_VERSION}}`, `{{CODEQL_CRON}}`,
+  `{{SKIP_FRONTEND_GRADLE_FLAG}}` gesetzt — in den `.template`-Dateien
+  unter `template/`.
+- [ ] Alle Platzhalter in `docs/dependabot-routine.md` gesetzt — siehe die
+  Liste dort, Abschnitt „Platzhalter in diesem Prompt".
+- [ ] Sprachmatrix in `codeql.yml.template` bereinigt — Einträge entfernen,
+  die nicht zu den gewählten Modulen passen (siehe Kommentare in der
+  Datei).
+- [ ] Rezept-Katalog in `ci/openrewrite-anwenden.sh.template` um die
+  tatsächlich eingesetzten Bibliotheken ergänzt, sobald ein Major-Sprung
+  anfällt (siehe „Katalog pflegen" oben — nicht auf Vorrat).
+- [ ] Claude-Code-Routine angelegt — `docs/dependabot-routine.md` als
+  tägliche Routine mit diesem Repository als Quelle über die
+  Claude-Code-Weboberfläche (claude.ai/code/routines) eingerichtet. Ohne
+  diesen Schritt existiert die Routine nur als Text, kein Modul- oder
+  GitHub-Actions-Mechanismus löst ihn automatisch aus (siehe unten).
 
 ## Offene Anmerkung
 

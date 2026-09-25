@@ -22,14 +22,25 @@ Dateien einhängen. Ohne dieses Fundament gibt es keine Stelle, an der
   Unterpaket, falls das Zielprojekt seine Konfiguration nach Fachbereich
   aufteilt, z. B. `config/{{DB_SCHEMA_LABEL}}`).
 
-## Platzhalter
+## Checkliste
 
-| Platzhalter | Bedeutung | Beispiel |
-|---|---|---|
-| `{{PACKAGE_BASE}}` | Basis-Package des Zielprojekts | `de.fourteen.example` |
-| `{{app}}` | Präfix für Spring-Properties | `example` (→ `example.league.db.url`) |
-| `{{DB_SCHEMA_LABEL}}` | Name des Migrations-Unterverzeichnisses unter `db/` | `league` (→ `classpath:db/league/migration`) |
-| `{{ExampleEntity}}` / `{{ExampleId}}` | Platzhalter-Fachtyp, beim Einspielen durch das echte Domänenmodell zu ersetzen | — |
+- [ ] `{{PACKAGE_BASE}}` gesetzt — Basis-Package des Zielprojekts (Beispiel:
+  `de.fourteen.example`).
+- [ ] `{{app}}` gesetzt — Präfix für Spring-Properties (Beispiel: `example`
+  → `example.league.db.url`).
+- [ ] `{{DB_SCHEMA_LABEL}}` gesetzt — Name des Migrations-Unterverzeichnisses
+  unter `db/` (Beispiel: `league` → `classpath:db/league/migration`).
+- [ ] `{{ExampleEntity}}` / `{{ExampleId}}` durch das echte Domänenmodell
+  ersetzt.
+- [ ] Port-Interface in `application/port/out/` nach dem Muster von
+  `ExampleRepositoryJdbc` angelegt (`save`, `findById`, `delete`, …) —
+  dieses Modul erzeugt keinen eigenen Port, weil dessen Form vom
+  jeweiligen Fachmodell abhängt.
+- [ ] Spring Boots eigene DataSource-/Flyway-Autoconfiguration in der
+  Hauptanwendungsklasse des Zielprojekts ausgeschlossen (`exclude` in
+  `@SpringBootApplication`) — sonst konkurriert sie mit dem manuellen
+  Wiring hier. Dieses Modul erzeugt diese Zeile nicht selbst, weil sie in
+  einer Klasse steht, die dieses Modul nicht besitzt.
 
 Die Property, die die Aktivierung steuert, heißt nach diesem Schema
 `{{app}}.db.url` (Beispielwert: `example.league.db.url`).
