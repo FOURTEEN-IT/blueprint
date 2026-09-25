@@ -2,15 +2,13 @@
 
 **Standardmäßig kein Cloudflare:** Die Fly.io-Vorlage dieses Moduls setzt
 bewusst **kein** Cloudflare ein — die DNS-Subdomain liegt direkt beim
-Registrar (CNAME auf `*.fly.dev`), und ADR-018 verwirft einen
-vorgeschalteten Proxy ausdruecklich:
+Registrar (CNAME auf `*.fly.dev`). Der Grund: Eine zusätzliche Proxy-Schicht
+bringt ein weiteres Idle-Timeout und eine zweite Zertifikatskette mit, ohne
+Nutzen für eine Anwendung mit wenigen, bekannten Nutzern ohne öffentliche
+Reichweite.
 
-> Der Proxy von Cloudflare o. Ä. bleibt außen vor: eine zusätzliche Schicht
-> brächte ein weiteres Idle-Timeout und eine zweite Zertifikatskette, ohne
-> Nutzen für ein paar Handys im selben Raum.
-
-Für eine Anwendung mit wenigen, bekannten Nutzern in einem Raum ist das eine
-vernünftige Entscheidung. Dieses Dokument liefert trotzdem eine eigenständige
+Für eine solche Anwendung ist das eine vernünftige Entscheidung. Dieses
+Dokument liefert trotzdem eine eigenständige
 Cloudflare-Vorlage für Projekte, die *einen* der folgenden Gründe haben:
 
 - Öffentliche Reichweite statt eines geschlossenen Freundeskreises (DDoS-

@@ -10,12 +10,12 @@ Gerüst.
 
 | Teil | Zweck |
 |---|---|
-| `template/fly.toml.template` | Fly.io-Konfiguration, inklusive Kommentaren zu den Architekturentscheidungen ADR-005/ADR-018 |
+| `template/fly.toml.template` | Fly.io-Konfiguration, inklusive Kommentaren zu den Architekturentscheidungen Ein-Instanz-Betrieb und Verzicht auf einen vorgeschalteten Proxy |
 | `template/Dockerfile.template` | Multi-Stage-Dockerfile für Frontend- und Backend-Build |
 | `template/.github/workflows/build.yml.template` | CI-Workflow; E2E- und Commit-Format-Schritte sind als auskommentierte Beispiele hinterlegt, weil sie projekteigene Skripte/Ebenen voraussetzen, die dieses Modul nicht mitliefert |
 | `template/.github/workflows/release.yml.template` | CD-Workflow; ein optionaler GitHub-Pages-Job für Testberichte ist **nicht** enthalten, weil er eine bestimmte Testebene voraussetzt (siehe unten) |
 | `template/.releaserc.json` | semantic-release-Konfiguration, bereits generisch gehalten (nur `branches` ist ein Platzhalter) |
-| `docs/cloudflare-setup.md` | Eigenständige Vorlage für Projekte, die einen Grund für Cloudflare haben. Diese Fly.io-Vorlage selbst setzt bewusst **kein** Cloudflare ein (ADR-018 verwirft einen vorgeschalteten Proxy ausdrücklich, DNS liegt direkt beim Registrar) — im Dokument selbst noch einmal so gekennzeichnet |
+| `docs/cloudflare-setup.md` | Eigenständige Vorlage für Projekte, die einen Grund für Cloudflare haben. Diese Fly.io-Vorlage selbst setzt bewusst **kein** Cloudflare ein (ein vorgeschalteter Proxy ist hier ausdrücklich unerwünscht, DNS liegt direkt beim Registrar) — im Dokument selbst noch einmal so gekennzeichnet |
 
 Bewusst nicht Teil dieses Moduls: ein täglicher GitHub-Actions-Relay-Job
 für einen externen, fachspezifischen Datenfeed. Das zugrunde liegende
@@ -40,7 +40,7 @@ falschen landen. Fly.io passt dazu, weil:
   bei fester Kostenkontrolle über die VM-Größe.
 - **Ein Fly-Volume** deckt den Fall ab, dass zumindest ein Snapshot des
   Zustands einen Neustart *innerhalb* einer laufenden Sitzung überleben
-  soll (ADR-023) — kein Ersatz für eine echte Datenbank
+  soll — kein Ersatz für eine echte Datenbank
   (siehe Modul `persistence-postgres-flyway`, falls dauerhafte Persistenz
   gebraucht wird), nur ein Abzug für den Fall eines Absturzes oder
   Deploys am selben Abend/derselben Sitzung.

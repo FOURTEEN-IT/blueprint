@@ -1,6 +1,6 @@
 # Deployment-Konfiguration fuer Fly.io.
 #
-# Die Werte hier (ADR-005/ADR-018) sind keine
+# Die Werte hier sind keine
 # Tuning-Parameter, sondern die Umsetzung einer bewussten Entscheidung: genau
 # eine Instanz, kein Autoscaling, kein Sharding (siehe README dieses Moduls).
 # Wer sie aendert, aendert diese Entscheidung -- zwei Instanzen waeren zwei
@@ -22,7 +22,7 @@ primary_region = "{{FLY_REGION}}"
 
 # Volume fuer persistenten Zustand -- nur einbinden, wenn die Anwendung
 # tatsaechlich etwas auf Platte sichert (z. B. einen Snapshot fuer einen
-# Neustart innerhalb einer laufenden Sitzung, siehe ADR-023). Ohne eigenen
+# Neustart innerhalb einer laufenden Sitzung). Ohne eigenen
 # Zustand auf Platte diesen Abschnitt entfernen.
 # Einmalig anlegen:
 #   fly volumes create {{VOLUME_NAME}} -a {{APP_NAME}} -r {{FLY_REGION}} -s 1
