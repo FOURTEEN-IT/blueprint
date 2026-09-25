@@ -81,6 +81,8 @@ Einheitlich über alle Fragmente (`{{...}}`):
   einen Snapshot/State auf Platte sichert; sonst den `[mounts]`-Abschnitt
   entfernen.
 - `{{SNAPSHOT_ENV_VAR_NAME}}`, `{{SNAPSHOT_SUBDIR}}` — optional, analog.
+- `{{SUBDOMAIN}}`, `{{DOMAIN}}` — nur bei einer eigenen Domain statt
+  `{{APP_NAME}}.fly.dev` (siehe „Was ein Nutzer noch braucht").
 - `{{MAIN_BRANCH}}` — Hauptzweig (Beispielwert: `main`).
 - `{{JAVA_VERSION}}`, `{{NODE_VERSION}}` — Toolchain-Versionen.
 - `{{FRONTEND_DIR}}`, `{{E2E_DIR}}` — Verzeichnisse, falls vorhanden.
@@ -109,6 +111,21 @@ Einheitlich über alle Fragmente (`{{...}}`):
   voraussetzt, die nicht jedes Projekt hat. Wer einen Testbericht
   veröffentlichen will, kann das Muster (eigener Job im selben Workflow,
   `needs: build`, `actions/deploy-pages`) übertragen.
+- **Eine eigene Domain/Subdomain statt `{{APP_NAME}}.fly.dev`** braucht
+  unabhängig davon, ob zusätzlich ein Proxy davorsteht, zwei manuelle
+  Schritte — dieses Modul löst sie nicht automatisch aus:
+  1. Beim Registrar (oder DNS-Anbieter) einen `CNAME`-Eintrag für
+     `{{SUBDOMAIN}}` auf `{{APP_NAME}}.fly.dev` anlegen.
+  2. `fly certs add {{SUBDOMAIN}}.{{DOMAIN}} -a {{APP_NAME}}` ausführen,
+     damit Fly für die eigene Domain ein gültiges Zertifikat ausstellt —
+     `force_https = true` in `fly.toml` greift sonst nur für `*.fly.dev`.
+     `fly certs show {{SUBDOMAIN}}.{{DOMAIN}} -a {{APP_NAME}}` zeigt den
+     Fortschritt, bis die DNS-Prüfung durch ist.
+
+  Ohne Proxy davor ist das schon alles — DNS zeigt direkt auf Fly.io.
+  Wer zusätzlich einen Proxy/CDN vorschalten will (z. B. für DDoS-Schutz
+  oder ein getrennt deploytes Frontend), löst das über dessen eigene
+  Anleitung; dieses Modul macht dazu keine Vorgabe.
 
 ## Ergänzendes Muster: externer Dienst blockiert Rechenzentrums-IPs
 
