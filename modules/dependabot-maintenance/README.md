@@ -30,7 +30,7 @@ Kein Fachcode — nur das Wartungsgerüst.
   zweiten CodeQL-Sprachblock (`javascript-typescript`).
 - **`quality-gates` (optional):** liefert die Gates, gegen die die Routine
   in Schritt 5c/5h prüft (`{{PRUEFEN_STUFEN}}` in `docs/dependabot-routine.md`).
-- **`deployment-fly-cloudflare` (optional):** liefert die Semantic-Release-
+- **`deployment-fly` (optional):** liefert die Semantic-Release-
   Konvention, gegen die die Routine ihre „niemals releasend committen"-Regel
   abgleicht (`{{RELEASING_COMMIT_TYPES}}`).
 

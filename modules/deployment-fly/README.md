@@ -1,9 +1,8 @@
-# deployment-fly-cloudflare
+# deployment-fly
 
 Liefert den generischen Deployment-Baustein: Fly.io als Hosting (ein
 Container, eine Instanz, optionales Fly-Volume für persistenten Zustand),
-GitHub Actions für Build/Release/Deploy, und eine eigenständige
-Cloudflare-Vorlage als vorgeschaltete Schicht. Kein Fachcode — nur das
+GitHub Actions für Build/Release/Deploy. Kein Fachcode — nur das
 Gerüst.
 
 ## Umfang
@@ -15,7 +14,6 @@ Gerüst.
 | `template/.github/workflows/build.yml.template` | CI-Workflow; E2E- und Commit-Format-Schritte sind als auskommentierte Beispiele hinterlegt, weil sie projekteigene Skripte/Ebenen voraussetzen, die dieses Modul nicht mitliefert |
 | `template/.github/workflows/release.yml.template` | CD-Workflow; ein optionaler GitHub-Pages-Job für Testberichte ist **nicht** enthalten, weil er eine bestimmte Testebene voraussetzt (siehe unten) |
 | `template/.releaserc.json` | semantic-release-Konfiguration, bereits generisch gehalten (nur `branches` ist ein Platzhalter) |
-| `docs/cloudflare-setup.md` | Eigenständige Vorlage für Projekte, die einen Grund für Cloudflare haben. Diese Fly.io-Vorlage selbst setzt bewusst **kein** Cloudflare ein (ein vorgeschalteter Proxy ist hier ausdrücklich unerwünscht, DNS liegt direkt beim Registrar) — im Dokument selbst noch einmal so gekennzeichnet |
 
 Bewusst nicht Teil dieses Moduls: ein täglicher GitHub-Actions-Relay-Job
 für einen externen, fachspezifischen Datenfeed. Das zugrunde liegende
@@ -66,7 +64,6 @@ sind dann nicht nötig und sollten entfernt werden.
 | `template/.github/workflows/build.yml.template` | CI: Checkout, Build, Tests, Testbericht als Artifact |
 | `template/.github/workflows/release.yml.template` | CD: ruft `build.yml` auf, optional Semantic Release, danach Fly-Deploy mit `--ha=false` |
 | `template/.releaserc.json` | semantic-release-Konfiguration (Conventional-Commits-basiert) |
-| `docs/cloudflare-setup.md` | Eigenständige Anleitung: Cloudflare als DNS/Proxy vor Fly.io, oder Cloudflare Pages für ein getrennt deploytes Frontend |
 
 ## Platzhalter
 
@@ -99,8 +96,6 @@ Einheitlich über alle Fragmente (`{{...}}`):
   Fachcode). Wer sie braucht, schreibt sie für das eigene Projekt, z. B. als
   `ci/eine-maschine-pruefen.sh`, `ci/rauchtest.mjs` und
   `ci/commit-format-pruefen.sh`.
-- `docs/cloudflare-setup.md`: `{{SUBDOMAIN}}`, `{{DOMAIN}}`,
-  `{{PAGES_PROJECT}}`.
 
 ## Was ein Nutzer noch braucht
 

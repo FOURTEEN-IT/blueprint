@@ -58,7 +58,7 @@ Vor dem Einrichten ersetzen:
   sonst den entsprechenden Satz im Prompt streichen.
 - `{{RELEASING_COMMIT_TYPES}}` — die Commit-Typen, die in diesem Projekt
   einen Release/Deploy auslösen (z. B. `fix`/`feat`/`perf`, siehe Modul
-  `deployment-fly-cloudflare`, Skill `freigabe`).
+  `deployment-fly`, Skill `freigabe`).
 - `{{NON_RELEASING_COMMIT_TYPES}}` — die Typen, die das nicht tun (z. B.
   `chore`/`ci`).
 - `{{PRUEFEN_STUFEN}}` — die gestufte lokale Prüfreihenfolge dieses
