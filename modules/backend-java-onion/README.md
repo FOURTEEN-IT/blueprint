@@ -1,8 +1,7 @@
 # backend-java-onion
 
 Liefert das Java/Spring-Boot-Grundgerüst für ein Backend in
-Onion-Architektur, so wie es die Referenzimplementierung (Watchparty)
-tatsächlich umsetzt: Ringe, die nur nach innen zeigen, JSpecify-Nullness
+Onion-Architektur: Ringe, die nur nach innen zeigen, JSpecify-Nullness
 über NullAway, jMolecules-Stereotypen für die DDD-Bausteine, ArchUnit als
 geprüfte statt bloß behauptete Struktur. Kein Fachcode — das Modul liefert
 das Gerüst, keine Domäne.
@@ -25,11 +24,11 @@ Modul:
 
 - `{{PACKAGE_BASE}}` — Basispaket, z. B. `de.example.projectname`. Wird zu
   Verzeichnissen unter `src/main/java/` und `src/test/java/`; überall dort,
-  wo Watchparty `de.fourteen.watchparty` schreibt, steht hier dieser
-  Platzhalter.
+  wo im Zielprojekt sonst ein konkretes Basispaket stünde, steht
+  hier dieser Platzhalter.
 - `{{PROJECT_NAME}}` — Gradle `group`/Anzeigename, in Kommentaren und im
   Feature-losen Beispielcode.
-- `{{JAVA_VERSION}}` — Toolchain-Version (Watchparty: 25). Ein neues Projekt
+- `{{JAVA_VERSION}}` — Toolchain-Version (Beispielwert: 25). Ein neues Projekt
   kann eine ältere LTS-Version wählen; die restlichen Fragmente sind davon
   unabhängig.
 - `{{ADDITIONAL_ADAPTER_PORTS}}` — Zeile(n) in `onionArchitecture()...
@@ -67,8 +66,7 @@ daneben stehengelassen.
 
 ## Testebenen (Konvention)
 
-Vier JUnit-Tags/Engines, disjunkt nach Reichweite, wie in der
-Referenzimplementierung:
+Vier JUnit-Tags/Engines, disjunkt nach Reichweite:
 
 - `unit`/`port` → Task `test` (schnell, kein Spring, kein Socket).
 - `adapter` → Task `adapterTest` (Adapter gegen echten Port, z. B.

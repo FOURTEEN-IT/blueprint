@@ -12,20 +12,17 @@ import java.util.Objects;
  * benannte Uebergaenge hier — nie ueber einen oeffentlichen Setter
  * ({@code ArchitectureTest.keineOeffentlichenSetterAufDemAggregateRoot}).
  *
- * Fachfrei benanntes Beispiel-Trio, das nur die Bauweise demonstriert. Als
- * Referenzbeispiel fuer ein echtes Aggregat mit Entities, Value Objects und
- * benannten Uebergaengen (statt Setter) siehe {@code Room} im
- * Watchparty-Projekt ({@code closeCurrentRound}, {@code addPick}, ...) —
- * nicht kopiert, weil {@code Room} Fachlogik traegt, die in diesem
- * Blueprint-Modul nichts zu suchen hat.
+ * Fachfrei benanntes Beispiel-Trio, das nur die Bauweise demonstriert: ein
+ * echtes Aggregat traegt Entities, Value Objects und benannte Uebergaenge
+ * (statt Setter) mit tatsaechlicher Fachlogik, die in diesem Blueprint-Modul
+ * bewusst nicht ausformuliert ist.
  *
  * Traegt bewusst kein {@code @Identity}: Ob ein Aggregat selbst eine
- * Identitaet braucht, haengt vom Projekt ab (in der
- * Referenzimplementierung hat der Aggregate Root {@code Room} seit einer
- * spaeteren Erweiterung eine {@code RoomCode}-Identitaet, weil ein Prozess
- * mehrere Instanzen davon haelt — anfangs, mit genau einer Instanz pro
- * Prozess, hatte er keine). Wird eine gebraucht, ein Feld nach demselben
- * Muster wie {@link ExampleEntity#id} ergaenzen.
+ * Identitaet braucht, haengt vom Projekt ab — bei genau einer Instanz pro
+ * Prozess braucht es meist keine; sobald ein Prozess mehrere Instanzen
+ * haelt, die ueber einen Code oder eine ID adressiert werden, braucht der
+ * Aggregate Root eine. Wird eine gebraucht, ein Feld nach demselben Muster
+ * wie {@link ExampleEntity#id} ergaenzen.
  */
 @AggregateRoot
 public final class ExampleAggregate {

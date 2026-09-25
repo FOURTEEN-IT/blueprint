@@ -9,9 +9,7 @@ import java.util.Objects;
  * Entity: hat eine Identitaet ({@link ExampleId}), die ueber die Zeit
  * gleichbleibt, waehrend sich ihr Zustand aendert.
  *
- * Fachfrei benanntes Beispiel — siehe {@link ExampleId} fuer den Verweis auf
- * die echten Entities der Referenzimplementierung ({@code Round},
- * {@code Player}).
+ * Fachfrei benanntes Beispiel, das nur die Bauweise demonstriert.
  *
  * Mutatoren sind paket-privat: Das ist die Aggregatgrenze (nur der
  * {@link ExampleAggregate}, im selben Paket, darf den Zustand aendern), kein

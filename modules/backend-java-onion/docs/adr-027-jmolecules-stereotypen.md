@@ -2,8 +2,6 @@
 
 **Status:** Vorlage — im Zielprojekt mit eigener Nummer übernehmen.
 
-**Referenzimplementierung:** Watchparty-Projekt, ADR-027.
-
 **Kontext:** „Dieser Typ ist der Aggregate Root" und „dieses Paket ist der
 Domänenring" lassen sich als Satz in Javadoc und Paketname ausdrücken —
 aber kein Werkzeug bemerkt, wenn ein neuer Domänentyp ohne erkennbaren
@@ -24,11 +22,10 @@ geschriebenen** ArchUnit-Regeln, nicht mit den vorgefertigten
 `jmolecules-archunit`-Regeln: Deren zuletzt veröffentlichte Version ist
 gegen eine ArchUnit-Version gebaut, die mit aktuellen ArchUnit-Ständen
 `NoSuchMethodError`/`AbstractMethodError` zur Laufzeit wirft — beim
-Testlauf, nicht beim Kompilieren. Ein Downgrade von ArchUnit dagegen führte
-in der Referenzimplementierung dazu, dass `@AnalyzeClasses` überhaupt keine
-Klassen mehr fand. Die Stereotyp-Annotationen selbst sind reine Marker und
-davon unberührt — nur die Bibliothek, die sie vorgefertigt prüfen wollte,
-ist es.
+Testlauf, nicht beim Kompilieren. Ein Downgrade von ArchUnit dagegen führt
+dazu, dass `@AnalyzeClasses` überhaupt keine Klassen mehr findet. Die
+Stereotyp-Annotationen selbst sind reine Marker und davon unberührt — nur
+die Bibliothek, die sie vorgefertigt prüfen wollte, ist es.
 
 - `jederDomaenentypTraegtEinenBaustein`: jeder öffentliche Typ in
   `domain.model` trägt genau einen der drei DDD-Bausteine. Ausnahmen (ein

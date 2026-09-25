@@ -55,5 +55,3 @@ dann reproduzierbar und nachlesbar, nicht interpretiert.
 - Springt das OpenRewrite-Plugin oder eine Rezeptsammlung selbst auf einen
   neuen Major, ist das Handarbeit — für das eigene Werkzeug gibt es kein
   Rezept.
-
-*Referenzimplementierung: Watchparty-Projekt, ADR-042.*

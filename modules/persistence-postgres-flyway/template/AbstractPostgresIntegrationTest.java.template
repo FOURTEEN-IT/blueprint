@@ -24,8 +24,6 @@ import javax.sql.DataSource;
  * gesamte JVM weiter (kein {@code stop()}): Testcontainers' Ryuk-Reaper
  * raeumt ihn beim Ende des Testlaufs auf.
  *
- * Vorbild: adapter/out/db/support/PostgresAdapterSupport.java (Watchparty).
- *
  * Die Tabellenliste in {@link #leereTabellen()} ist mit jeder neuen
  * Migration zu ergaenzen -- sie kennt nur, was zum Zeitpunkt des Einspielens
  * dieses Templates existiert ({@code example_entity}, aus

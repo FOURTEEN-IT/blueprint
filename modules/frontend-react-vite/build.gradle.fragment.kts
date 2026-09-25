@@ -1,7 +1,7 @@
 // Modul frontend-react-vite -- Gradle<->npm-Verdrahtung.
 //
-// Herkunft: eins zu eins aus Watchparty (build.gradle.kts) uebernommen und
-// von Fachbegriffen befreit. Vor dem Einspielen in ein Zielprojekt:
+// Fachfreies Gradle<->npm-Verdrahtungsfragment. Vor dem Einspielen in ein
+// Zielprojekt:
 //   - {{PROJECT_NAME}} durch den tatsaechlichen Projektnamen ersetzen
 //   - Pruefen, ob "processResources" der richtige Anknuepfungspunkt ist
 //     (bei einem reinen Spring-Boot-Jar ja; bei einem anderen Build-Tool
@@ -73,17 +73,17 @@ tasks.named("check") {
 
 // --- Abdeckungs-Gate (optional, projektspezifisch) ------------------------
 //
-// In Watchparty gibt es zusaetzlich einen Task `abdeckungFrontend`, der
-// jede mit der Marke "frontend" versehene Anforderungs-ID aus einem
-// Anforderungsdokument gegen die requirement(...)-Aufrufe in frontend/tests
-// (und einer moeglichen E2E-Ebene) abgleicht -- Regeln ohne Szenario und
-// Test-IDs ohne bekannte Anforderung fallen beide auf. Das Konzept setzt ein
-// eigenes Anforderungsdokument mit fester Tabellenform voraus (siehe
+// Ein ergaenzender Task `abdeckungFrontend` koennte jede mit der Marke
+// "frontend" versehene Anforderungs-ID aus einem Anforderungsdokument gegen
+// die requirement(...)-Aufrufe in frontend/tests (und einer moeglichen
+// E2E-Ebene) abgleichen -- Regeln ohne Szenario und Test-IDs ohne bekannte
+// Anforderung wuerden beide auffallen. Das Konzept setzt ein eigenes
+// Anforderungsdokument mit fester Tabellenform voraus (siehe
 // requirement.js), die dieses generische Geruest nicht mitbringt.
 //
 // Ob und wie ein Zielprojekt das nachbaut, ist eine offene Erweiterung
 // dieses Moduls -- hier absichtlich nicht erfunden, weil die Form des
-// Anforderungsdokuments je nach Projekt unterschiedlich sein kann. Wer es
-// nachbauen will: Watchparty build.gradle.kts, Task `abdeckungFrontend`
-// (sucht `## Anhang A`, parst eine Markdown-Tabelle, gleicht sie mit
-// `requirement\(...\)`-Aufrufen ab) als Vorlage nehmen.
+// Anforderungsdokuments je nach Projekt unterschiedlich sein kann. Ein
+// moeglicher Ansatz: einen Task schreiben, der `## Anhang A` sucht, eine
+// Markdown-Tabelle parst und sie mit `requirement\(...\)`-Aufrufen
+// abgleicht.

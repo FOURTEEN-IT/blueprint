@@ -1,8 +1,7 @@
 # Multi-Stage-Build: Frontend bauen, Backend bauen, schlankes Runtime-Image.
-# Referenz: Watchparty (Dockerfile). Anpassen an den tatsaechlich gewaehlten
-# Backend-Baustein (dieses Beispiel: Gradle/Java) und Frontend-Baustein
-# (dieses Beispiel: Node/Vite) -- Platzhalter markieren, was projektspezifisch
-# ist.
+# Anpassen an den tatsaechlich gewaehlten Backend-Baustein (dieses Beispiel:
+# Gradle/Java) und Frontend-Baustein (dieses Beispiel: Node/Vite) --
+# Platzhalter markieren, was projektspezifisch ist.
 
 # --- Frontend bauen (nur falls ein separates Frontend existiert) ----------
 FROM node:{{NODE_VERSION}}-alpine AS frontend

@@ -20,8 +20,6 @@ import javax.sql.DataSource;
  * Spring-Boot-Autoconfiguration fuer DataSource und Flyway (die im
  * Zielprojekt auszuschalten ist, siehe README.md dieses Moduls).
  *
- * Vorbild: config/league/LeagueDatabaseConfig.java (Watchparty).
- *
  * {@code @ConditionalOnProperty} auf {@code {{app}}.db.url}: Fehlt die
  * Eigenschaft, entsteht in dieser Klasse kein einziger Bean -- der
  * Datenbank-Teil bleibt dann funktionslos, aber die Anwendung startet

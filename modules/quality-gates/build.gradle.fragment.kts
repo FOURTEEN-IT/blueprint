@@ -1,11 +1,11 @@
 // Modul quality-gates -- Mutationstests und JGiven-Report ueber alle
 // Ebenen, verbindlich an `check` gehaengt.
 //
-// Herkunft: aus Watchparty (build.gradle.kts) uebernommen und von
-// Fachbegriffen (Kritikalitaetsstufen, Klassennamen, Anforderungsdokument-
-// Format) befreit. Setzt voraus, dass das Modul backend-java-onion bereits
-// eingespielt ist -- die Test-Tasks `test`/`adapterTest`/`apiTest`/`archTest`
-// werden hier referenziert, nicht definiert.
+// Fachfreies Fragment (Kritikalitaetsstufen, Klassennamen und
+// Anforderungsdokument-Format sind Platzhalter). Setzt voraus, dass das
+// Modul backend-java-onion bereits eingespielt ist -- die Test-Tasks
+// `test`/`adapterTest`/`apiTest`/`archTest` werden hier referenziert, nicht
+// definiert.
 //
 // Einspielen: An das Ende von build.gradle.kts des Zielprojekts haengen,
 // NACH dem Fragment von backend-java-onion.
@@ -82,16 +82,16 @@ tasks.named("check") {
 //
 // Welche Klassen kritisch sind, steht als Annotation am Code selbst
 // (Konvention, keine Bibliotheksklasse dieses Moduls -- ein Projekt
-// definiert {{PACKAGE_BASE}}.criticality.Critical selbst, analog zu
-// Watchpartys @Criticality). Diese Liste wird deshalb daraus *abgeleitet*
-// und nicht daneben gefuehrt: Eine zweite, handgepflegte Aufzaehlung waere
+// definiert {{PACKAGE_BASE}}.criticality.Critical selbst). Diese Liste wird
+// deshalb daraus *abgeleitet* und nicht daneben gefuehrt: Eine zweite,
+// handgepflegte Aufzaehlung waere
 // genau die zweite Wahrheit, die still veraltet -- eine neu als kritisch
 // eingestufte Klasse bliebe unmutiert, und der Mutation Score bliebe gruen,
 // obwohl er sie nie angefasst hat. Reflection ueber die kompilierten
 // Klassen, keine Textsuche im Quelltext.
 //
 // Property `pitestLevel` waehlt die Stufe (Default: HIGH) -- ein Projekt mit
-// mehr als einer Kritikalitaetsstufe (wie Watchparty: LOW/MEDIUM/HIGH) kann
+// mehr als einer Kritikalitaetsstufe (Beispielwert: LOW/MEDIUM/HIGH) kann
 // hier einen anderen Wert setzen; der Annotationstyp selbst entscheidet, ob
 // diese Stufe ueberhaupt existiert (die Annotation ist Projektsache).
 val criticalClasses = provider {

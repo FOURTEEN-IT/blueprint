@@ -30,11 +30,13 @@ gegen einen eigenen Anforderungskatalog abgleichen -- das Konzept ist
 generalisiert, das Gate selbst ist projektspezifisch und deshalb nicht Teil
 dieses Moduls.
 
-## Beispielimplementierung
+## Ausbaufaehigkeit
 
-Watchparty (`frontend/tests/`) zeigt eine ausgebaute Fassung: ein
-`setup.js` mit projektspezifischen Grundannahmen je Test, eine geteilte
-Zustandsform (`zustand.js`) fuer wiederkehrende Serverdaten in Tests, sowie
-den Abdeckungs-Task `abdeckungFrontend` in `build.gradle.kts`, der Anhang A
-eines Anforderungsdokuments gegen `anforderung(...)`-Aufrufe (dort so
-benannt) abgleicht.
+Eine ausgebaute Fassung dieser Testebene kann zusaetzlich ein `setup.js` mit
+projektspezifischen Grundannahmen je Test sowie eine geteilte Zustandsform
+(z.B. `zustand.js`) fuer wiederkehrende Serverdaten in Tests enthalten. Der
+Abdeckungs-Task aus dem vorigen Abschnitt liesse sich als eigener
+Gradle-Task ergaenzen, der einen Anforderungskatalog gegen
+`requirement(...)`-Aufrufe abgleicht -- beides ist bewusst nicht Teil
+dieses Moduls, weil es ein projektspezifisches Anforderungsdokument
+voraussetzt.

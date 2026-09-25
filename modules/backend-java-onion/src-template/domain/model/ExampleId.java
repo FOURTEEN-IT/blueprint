@@ -10,11 +10,9 @@ import java.util.UUID;
  *
  * Fachfrei benanntes Beispiel-Trio ({@code ExampleAggregate}/
  * {@code ExampleEntity}/{@code ExampleId}) — es zeigt nur die Bauweise, kein
- * Fachkonzept. In der Referenzimplementierung (Watchparty-Projekt) sind
- * {@code PlayerId}/{@code RoundId}/{@code BetId}/{@code OutcomeId} die
- * echten Gegenstuecke: jede Identitaet ihr eigener Typ, gegeneinander nicht
- * austauschbar — ein Vertauschen zweier IDs ist dort ein Kompilierfehler,
- * nicht ein Laufzeitfehler.
+ * Fachkonzept. Im echten Fachmodell traegt jede Identitaet ihren eigenen
+ * Typ, gegeneinander nicht austauschbar — ein Vertauschen zweier IDs ist
+ * dann ein Kompilierfehler, nicht ein Laufzeitfehler.
  *
  * Ein Value Object ist ueber seine Werte gleich, nie ueber eine separate
  * Identitaet — deshalb {@code equals}/{@code hashCode} auf {@code value},

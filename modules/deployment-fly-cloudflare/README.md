@@ -3,30 +3,30 @@
 Liefert den generischen Deployment-Baustein: Fly.io als Hosting (ein
 Container, eine Instanz, optionales Fly-Volume für persistenten Zustand),
 GitHub Actions für Build/Release/Deploy, und eine eigenständige
-Cloudflare-Vorlage als vorgeschaltete Schicht. Kein Fachcode aus
-Watchparty — nur das Gerüst.
+Cloudflare-Vorlage als vorgeschaltete Schicht. Kein Fachcode — nur das
+Gerüst.
 
-## Herkunft, ehrlich getrennt
+## Umfang
 
-| Teil | Herkunft |
+| Teil | Zweck |
 |---|---|
-| `template/fly.toml.template` | Generalisiert aus Watchparty (`fly.toml`), inklusive der Kommentare zu ADR-005/ADR-018 |
-| `template/Dockerfile.template` | Generalisiert aus Watchparty (`Dockerfile`) |
-| `template/.github/workflows/build.yml.template` | Generalisiert aus Watchparty (`.github/workflows/build.yml`), E2E- und Commit-Format-Schritte als auskommentierte Beispiele, weil sie projekteigene Skripte/Ebenen voraussetzen, die dieses Modul nicht mitliefert |
-| `template/.github/workflows/release.yml.template` | Generalisiert aus Watchparty (`.github/workflows/release.yml`); der GitHub-Pages-Job (JGiven-Bericht) ist **nicht** übernommen, weil er an Watchpartys eigene Testebene hängt |
-| `template/.releaserc.json` | Unverändert aus Watchparty übernommen (semantic-release-Konfiguration ist bereits generisch, nur `branches` ist ein Platzhalter) |
-| `docs/cloudflare-setup.md` | **Keine Watchparty-Herkunft.** Watchparty setzt bewusst **kein** Cloudflare ein (ADR-018 verwirft einen vorgeschalteten Proxy ausdrücklich, DNS liegt dort direkt bei IONOS). Das Dokument ist eine eigenständig verfasste Vorlage für Projekte, die einen Grund für Cloudflare haben, den Watchparty nicht hat — im Dokument selbst noch einmal so gekennzeichnet |
+| `template/fly.toml.template` | Fly.io-Konfiguration, inklusive Kommentaren zu den Architekturentscheidungen ADR-005/ADR-018 |
+| `template/Dockerfile.template` | Multi-Stage-Dockerfile für Frontend- und Backend-Build |
+| `template/.github/workflows/build.yml.template` | CI-Workflow; E2E- und Commit-Format-Schritte sind als auskommentierte Beispiele hinterlegt, weil sie projekteigene Skripte/Ebenen voraussetzen, die dieses Modul nicht mitliefert |
+| `template/.github/workflows/release.yml.template` | CD-Workflow; ein optionaler GitHub-Pages-Job für Testberichte ist **nicht** enthalten, weil er eine bestimmte Testebene voraussetzt (siehe unten) |
+| `template/.releaserc.json` | semantic-release-Konfiguration, bereits generisch gehalten (nur `branches` ist ein Platzhalter) |
+| `docs/cloudflare-setup.md` | Eigenständige Vorlage für Projekte, die einen Grund für Cloudflare haben. Diese Fly.io-Vorlage selbst setzt bewusst **kein** Cloudflare ein (ADR-018 verwirft einen vorgeschalteten Proxy ausdrücklich, DNS liegt direkt beim Registrar) — im Dokument selbst noch einmal so gekennzeichnet |
 
-Nicht übernommen: `schedule-relay.yml` (Watchparty). Der tägliche
-GitHub-Actions-Relay dort ist fachspezifisch (ESPN-Feed für das
-Tippspiel), zeigt aber ein generalisierbares **Muster**, das dieses Modul
-nicht als Code, sondern nur als Hinweis mitgibt (siehe unten).
+Bewusst nicht Teil dieses Moduls: ein täglicher GitHub-Actions-Relay-Job
+für einen externen, fachspezifischen Datenfeed. Das zugrunde liegende
+Muster ist generalisierbar und wird unten als Hinweis mitgegeben, ohne
+den fachspezifischen Code selbst.
 
 ## Warum Fly.io (Kontext für diese Wahl)
 
-Dieses Modul passt zu Anwendungen, die dieselbe Architekturentscheidung wie
-Watchparty treffen: **genau eine Server-Instanz, kein Autoscaling, kein
-Sharding** (Watchparty: harte Invariante 6, CLAUDE.md). Der Grund ist nicht
+Dieses Modul passt zu Anwendungen mit derselben Architekturentscheidung:
+**genau eine Server-Instanz, kein Autoscaling, kein Sharding** (harte
+Invariante 6, CLAUDE.md). Der Grund ist nicht
 Sparsamkeit, sondern Korrektheit: Sobald Zustand im Arbeitsspeicher lebt
 (WebSocket-Sitzungen, ein In-Memory-Aggregat, ein Actor-Loop) und nicht
 über mehrere Instanzen hinweg konsistent gehalten wird, wären zwei
@@ -40,7 +40,7 @@ falschen landen. Fly.io passt dazu, weil:
   bei fester Kostenkontrolle über die VM-Größe.
 - **Ein Fly-Volume** deckt den Fall ab, dass zumindest ein Snapshot des
   Zustands einen Neustart *innerhalb* einer laufenden Sitzung überleben
-  soll (Watchparty-Vorbild: ADR-023) — kein Ersatz für eine echte Datenbank
+  soll (ADR-023) — kein Ersatz für eine echte Datenbank
   (siehe Modul `persistence-postgres-flyway`, falls dauerhafte Persistenz
   gebraucht wird), nur ein Abzug für den Fall eines Absturzes oder
   Deploys am selben Abend/derselben Sitzung.
@@ -73,9 +73,9 @@ sind dann nicht nötig und sollten entfernt werden.
 Einheitlich über alle Fragmente (`{{...}}`):
 
 - `{{APP_NAME}}` — Fly-App-Name.
-- `{{FLY_REGION}}` — Fly-Region (Watchparty: `fra`).
+- `{{FLY_REGION}}` — Fly-Region (Beispielwert: `fra`).
 - `{{FLY_VM_SIZE}}`, `{{FLY_VM_MEMORY}}` — VM-Größe/Speicher.
-- `{{APP_PORT}}` — interner Port der Anwendung (Watchparty: `8080`).
+- `{{APP_PORT}}` — interner Port der Anwendung (Beispielwert: `8080`).
 - `{{HEALTHCHECK_PATH}}` — Pfad für den HTTP-Health-Check.
 - `{{CONCURRENCY_SOFT_LIMIT}}`, `{{CONCURRENCY_HARD_LIMIT}}` — Grenzwerte
   für gleichzeitige Verbindungen; bei dauerhaft offenen WebSockets und
@@ -84,21 +84,21 @@ Einheitlich über alle Fragmente (`{{...}}`):
   einen Snapshot/State auf Platte sichert; sonst den `[mounts]`-Abschnitt
   entfernen.
 - `{{SNAPSHOT_ENV_VAR_NAME}}`, `{{SNAPSHOT_SUBDIR}}` — optional, analog.
-- `{{MAIN_BRANCH}}` — Hauptzweig (Watchparty: `main`).
+- `{{MAIN_BRANCH}}` — Hauptzweig (Beispielwert: `main`).
 - `{{JAVA_VERSION}}`, `{{NODE_VERSION}}` — Toolchain-Versionen.
 - `{{FRONTEND_DIR}}`, `{{E2E_DIR}}` — Verzeichnisse, falls vorhanden.
 - `{{GRADLE_IMAGE_TAG}}`, `{{JRE_IMAGE_TAG}}` — Docker-Image-Tags fürs
-  Backend-Build bzw. die Runtime (Watchparty: `9.6-jdk25` / `25-jre-alpine`).
+  Backend-Build bzw. die Runtime (Beispielwert: `9.6-jdk25` / `25-jre-alpine`).
 - `{{SKIP_FRONTEND_GRADLE_PROPERTY}}` — Name der Gradle-Property, mit der
-  ein reiner Backend-Build ohne Frontend läuft (Watchparty: `skipFrontend`).
+  ein reiner Backend-Build ohne Frontend läuft (Beispielwert: `skipFrontend`).
 - `{{COMMIT_FORMAT_CHECK_SCRIPT}}`, `{{SINGLE_MACHINE_CHECK_SCRIPT}}`,
   `{{SMOKE_TEST_SCRIPT}}`, `{{SMOKE_TEST_URL}}` — Pfade zu optionalen,
   projekteigenen Prüfskripten; die zugehörigen Schritte in
   `release.yml.template`/`build.yml.template` sind deshalb auskommentiert
   statt aktiv, weil dieses Modul die Skripte selbst nicht mitliefert (kein
-  Fachcode). Wer sie braucht, schreibt sie analog zu Watchparty
-  (`ci/eine-maschine-pruefen.sh`, `ci/rauchtest.mjs`,
-  `ci/commit-format-pruefen.sh`) für das eigene Projekt.
+  Fachcode). Wer sie braucht, schreibt sie für das eigene Projekt, z. B. als
+  `ci/eine-maschine-pruefen.sh`, `ci/rauchtest.mjs` und
+  `ci/commit-format-pruefen.sh`.
 - `docs/cloudflare-setup.md`: `{{SUBDOMAIN}}`, `{{DOMAIN}}`,
   `{{PAGES_PROJECT}}`.
 
@@ -109,28 +109,24 @@ Einheitlich über alle Fragmente (`{{...}}`):
   `GITHUB_TOKEN` (von GitHub Actions automatisch bereitgestellt).
 - **Ein Fly-Postgres oder eine andere Datenbank** ist nicht Teil dieses
   Moduls — siehe `persistence-postgres-flyway`.
-- **Der GitHub-Pages-Job aus Watchparty** (Veröffentlichung eines
-  Testberichts) ist nicht übernommen, weil er an eine spezifische
-  Testebene (JGiven) hängt, die dieses Modul nicht voraussetzt. Wer einen
-  Testbericht veröffentlichen will, kann das Muster (eigener Job im selben
-  Workflow, `needs: build`, `actions/deploy-pages`) übertragen.
+- **Ein GitHub-Pages-Job zur Veröffentlichung eines Testberichts** ist
+  bewusst nicht Teil dieses Moduls, weil er eine spezifische Testebene
+  voraussetzt, die nicht jedes Projekt hat. Wer einen Testbericht
+  veröffentlichen will, kann das Muster (eigener Job im selben Workflow,
+  `needs: build`, `actions/deploy-pages`) übertragen.
 
-## Ein Muster aus Watchparty, nicht übernommen als Code
+## Ergänzendes Muster: externer Dienst blockiert Rechenzentrums-IPs
 
-Watchpartys `schedule-relay.yml` löst ein Problem, das über Fly.io
-hinausgeht: Ein externer Dienst (dort: der ESPN-Feed) blockiert Zugriffe
-aus dem Fly.io-IP-Bereich (Akamai-Bot-Abwehr gegen Rechenzentrums-Adressen,
-ADR-037-Nachtrag). Statt eines internen, selbst geplanten Jobs auf der
-Fly-Instanz ruft dort ein täglicher GitHub-Actions-Workflow den externen
-Dienst von einem GitHub-Runner ab (anderes Netz) und reicht die Antwort an
-einen Relay-Endpunkt der Anwendung weiter.
+Manche externen Dienste blockieren Zugriffe aus Rechenzentrums-IP-Bereichen
+wie dem von Fly.io (z. B. Bot-Abwehr gegen Rechenzentrums-Adressen). Statt
+eines internen, selbst geplanten Jobs auf der Fly-Instanz kann dann ein
+täglicher/periodischer GitHub-Actions-Cronjob die Daten von einem
+GitHub-Runner (anderes Netz) abrufen und über einen eigenen,
+tokengeschützten Endpunkt an die Anwendung weiterreichen.
 
 Das ist als **Muster** generell brauchbar, sobald eine Zielumgebung
 (Fly.io oder sonst ein Rechenzentrums-IP-Bereich) von einem externen
-Dienst geblockt wird: ein täglicher/periodischer GitHub-Actions-Cronjob
-als Ersatz für einen internen Scheduler, der Daten von außerhalb abruft
-und über einen eigenen, tokengeschützten Endpunkt an die Anwendung
-weiterreicht. Der konkrete Fachcode (ESPN, Spieltage, Saison) ist bewusst
-nicht Teil dieses Moduls — wer das Muster braucht, schreibt den Relay für
-den eigenen externen Dienst analog zu Watchparty
-(`.github/workflows/schedule-relay.yml`) selbst.
+Dienst geblockt wird. Der konkrete Fachcode für den jeweiligen externen
+Dienst ist bewusst nicht Teil dieses Moduls — wer das Muster braucht,
+schreibt den Relay als eigenen GitHub-Actions-Workflow für den eigenen
+externen Dienst selbst.

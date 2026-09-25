@@ -1,6 +1,6 @@
 # Deployment-Konfiguration fuer Fly.io.
 #
-# Referenz: Watchparty (fly.toml, ADR-005/ADR-018). Die Werte hier sind keine
+# Die Werte hier (ADR-005/ADR-018) sind keine
 # Tuning-Parameter, sondern die Umsetzung einer bewussten Entscheidung: genau
 # eine Instanz, kein Autoscaling, kein Sharding (siehe README dieses Moduls).
 # Wer sie aendert, aendert diese Entscheidung -- zwei Instanzen waeren zwei
@@ -22,8 +22,8 @@ primary_region = "{{FLY_REGION}}"
 
 # Volume fuer persistenten Zustand -- nur einbinden, wenn die Anwendung
 # tatsaechlich etwas auf Platte sichert (z. B. einen Snapshot fuer einen
-# Neustart innerhalb einer laufenden Sitzung, analog zu ADR-023 in
-# Watchparty). Ohne eigenen Zustand auf Platte diesen Abschnitt entfernen.
+# Neustart innerhalb einer laufenden Sitzung, siehe ADR-023). Ohne eigenen
+# Zustand auf Platte diesen Abschnitt entfernen.
 # Einmalig anlegen:
 #   fly volumes create {{VOLUME_NAME}} -a {{APP_NAME}} -r {{FLY_REGION}} -s 1
 # Ein Volume haengt an einer Maschine -- das macht die Ein-Instanz-Regel

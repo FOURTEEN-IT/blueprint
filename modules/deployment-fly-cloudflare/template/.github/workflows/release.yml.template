@@ -3,9 +3,8 @@ name: Release & Deploy
 # Ausloeser ist Semantic Release (falls eingebunden, siehe
 # .releaserc.json): nur ein Commit mit "fix:", "feat:" o.ae. erzeugt einen
 # Release, und nur ein tatsaechlich veroeffentlichter Release loest den
-# Fly-Deploy aus. Referenz: Watchparty (release.yml). Ohne semantic-release
-# den "release"-Job durch einen einfachen Trigger auf den Hauptzweig
-# ersetzen.
+# Fly-Deploy aus. Ohne semantic-release den "release"-Job durch einen
+# einfachen Trigger auf den Hauptzweig ersetzen.
 
 on:
   push:
@@ -64,7 +63,7 @@ jobs:
 
       # Gegenstueck zu --ha=false: automatisierte Kontrolle statt eines
       # Kommentars, der auf einen Menschen hofft. Skript liegt projektseitig,
-      # z. B. unter ci/eine-maschine-pruefen.sh (Vorbild: Watchparty).
+      # z. B. unter ci/eine-maschine-pruefen.sh.
       # - name: Genau eine Maschine
       #   run: {{SINGLE_MACHINE_CHECK_SCRIPT}} {{APP_NAME}}
       #   env:
@@ -73,7 +72,8 @@ jobs:
       # Optionaler Rauchtest gegen die laufende Instanz -- der Fly-
       # Healthcheck in fly.toml prueft nur die statische Auslieferung bzw.
       # einen einzelnen HTTP-Pfad, nicht die eigentliche Anwendungslogik
-      # dahinter (z. B. einen internen Event-Loop). Vorbild: Watchparty
-      # (ci/rauchtest.mjs), dort ueber eine echte WebSocket-Verbindung.
+      # dahinter (z. B. einen internen Event-Loop). Ein solches Skript
+      # (z. B. ci/rauchtest.mjs) kann etwa ueber eine echte WebSocket-
+      # Verbindung pruefen.
       # - name: Rauchtest gegen die laufende Instanz
       #   run: node {{SMOKE_TEST_SCRIPT}} {{SMOKE_TEST_URL}}
