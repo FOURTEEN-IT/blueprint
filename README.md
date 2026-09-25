@@ -16,7 +16,7 @@ Siehe [`docs/module-katalog.md`](docs/module-katalog.md) für die
 - `backend-java-onion` — Java/Spring-Boot in Onion-Architektur
 - `frontend-react-vite` — React/Vite, Build ins Backend-Jar eingebettet
 - `persistence-postgres-flyway` — Postgres über Flyway, ohne Spring Data
-- `deployment-fly-cloudflare` — Fly.io-Hosting, GitHub Actions, Cloudflare optional
+- `deployment-fly` — Fly.io-Hosting, GitHub Actions
 - `quality-gates` — Mutationstests, JGiven-Report
 - `dependabot-maintenance` — Dependabot, CodeQL, OpenRewrite, tägliche PR-Routine
 

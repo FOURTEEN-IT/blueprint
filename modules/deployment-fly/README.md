@@ -1,21 +1,19 @@
-# deployment-fly-cloudflare
+# deployment-fly
 
 Liefert den generischen Deployment-Baustein: Fly.io als Hosting (ein
 Container, eine Instanz, optionales Fly-Volume für persistenten Zustand),
-GitHub Actions für Build/Release/Deploy, und eine eigenständige
-Cloudflare-Vorlage als vorgeschaltete Schicht. Kein Fachcode — nur das
+GitHub Actions für Build/Release/Deploy. Kein Fachcode — nur das
 Gerüst.
 
 ## Umfang
 
 | Teil | Zweck |
 |---|---|
-| `template/fly.toml.template` | Fly.io-Konfiguration, inklusive Kommentaren zu den Architekturentscheidungen ADR-005/ADR-018 |
+| `template/fly.toml.template` | Fly.io-Konfiguration, inklusive Kommentaren zu den Architekturentscheidungen Ein-Instanz-Betrieb und Verzicht auf einen vorgeschalteten Proxy |
 | `template/Dockerfile.template` | Multi-Stage-Dockerfile für Frontend- und Backend-Build |
 | `template/.github/workflows/build.yml.template` | CI-Workflow; E2E- und Commit-Format-Schritte sind als auskommentierte Beispiele hinterlegt, weil sie projekteigene Skripte/Ebenen voraussetzen, die dieses Modul nicht mitliefert |
 | `template/.github/workflows/release.yml.template` | CD-Workflow; ein optionaler GitHub-Pages-Job für Testberichte ist **nicht** enthalten, weil er eine bestimmte Testebene voraussetzt (siehe unten) |
 | `template/.releaserc.json` | semantic-release-Konfiguration, bereits generisch gehalten (nur `branches` ist ein Platzhalter) |
-| `docs/cloudflare-setup.md` | Eigenständige Vorlage für Projekte, die einen Grund für Cloudflare haben. Diese Fly.io-Vorlage selbst setzt bewusst **kein** Cloudflare ein (ADR-018 verwirft einen vorgeschalteten Proxy ausdrücklich, DNS liegt direkt beim Registrar) — im Dokument selbst noch einmal so gekennzeichnet |
 
 Bewusst nicht Teil dieses Moduls: ein täglicher GitHub-Actions-Relay-Job
 für einen externen, fachspezifischen Datenfeed. Das zugrunde liegende
@@ -40,7 +38,7 @@ falschen landen. Fly.io passt dazu, weil:
   bei fester Kostenkontrolle über die VM-Größe.
 - **Ein Fly-Volume** deckt den Fall ab, dass zumindest ein Snapshot des
   Zustands einen Neustart *innerhalb* einer laufenden Sitzung überleben
-  soll (ADR-023) — kein Ersatz für eine echte Datenbank
+  soll — kein Ersatz für eine echte Datenbank
   (siehe Modul `persistence-postgres-flyway`, falls dauerhafte Persistenz
   gebraucht wird), nur ein Abzug für den Fall eines Absturzes oder
   Deploys am selben Abend/derselben Sitzung.
@@ -66,7 +64,6 @@ sind dann nicht nötig und sollten entfernt werden.
 | `template/.github/workflows/build.yml.template` | CI: Checkout, Build, Tests, Testbericht als Artifact |
 | `template/.github/workflows/release.yml.template` | CD: ruft `build.yml` auf, optional Semantic Release, danach Fly-Deploy mit `--ha=false` |
 | `template/.releaserc.json` | semantic-release-Konfiguration (Conventional-Commits-basiert) |
-| `docs/cloudflare-setup.md` | Eigenständige Anleitung: Cloudflare als DNS/Proxy vor Fly.io, oder Cloudflare Pages für ein getrennt deploytes Frontend |
 
 ## Platzhalter
 
@@ -84,6 +81,8 @@ Einheitlich über alle Fragmente (`{{...}}`):
   einen Snapshot/State auf Platte sichert; sonst den `[mounts]`-Abschnitt
   entfernen.
 - `{{SNAPSHOT_ENV_VAR_NAME}}`, `{{SNAPSHOT_SUBDIR}}` — optional, analog.
+- `{{SUBDOMAIN}}`, `{{DOMAIN}}` — nur bei einer eigenen Domain statt
+  `{{APP_NAME}}.fly.dev` (siehe „Was ein Nutzer noch braucht").
 - `{{MAIN_BRANCH}}` — Hauptzweig (Beispielwert: `main`).
 - `{{JAVA_VERSION}}`, `{{NODE_VERSION}}` — Toolchain-Versionen.
 - `{{FRONTEND_DIR}}`, `{{E2E_DIR}}` — Verzeichnisse, falls vorhanden.
@@ -99,8 +98,6 @@ Einheitlich über alle Fragmente (`{{...}}`):
   Fachcode). Wer sie braucht, schreibt sie für das eigene Projekt, z. B. als
   `ci/eine-maschine-pruefen.sh`, `ci/rauchtest.mjs` und
   `ci/commit-format-pruefen.sh`.
-- `docs/cloudflare-setup.md`: `{{SUBDOMAIN}}`, `{{DOMAIN}}`,
-  `{{PAGES_PROJECT}}`.
 
 ## Was ein Nutzer noch braucht
 
@@ -114,6 +111,21 @@ Einheitlich über alle Fragmente (`{{...}}`):
   voraussetzt, die nicht jedes Projekt hat. Wer einen Testbericht
   veröffentlichen will, kann das Muster (eigener Job im selben Workflow,
   `needs: build`, `actions/deploy-pages`) übertragen.
+- **Eine eigene Domain/Subdomain statt `{{APP_NAME}}.fly.dev`** braucht
+  unabhängig davon, ob zusätzlich ein Proxy davorsteht, zwei manuelle
+  Schritte — dieses Modul löst sie nicht automatisch aus:
+  1. Beim Registrar (oder DNS-Anbieter) einen `CNAME`-Eintrag für
+     `{{SUBDOMAIN}}` auf `{{APP_NAME}}.fly.dev` anlegen.
+  2. `fly certs add {{SUBDOMAIN}}.{{DOMAIN}} -a {{APP_NAME}}` ausführen,
+     damit Fly für die eigene Domain ein gültiges Zertifikat ausstellt —
+     `force_https = true` in `fly.toml` greift sonst nur für `*.fly.dev`.
+     `fly certs show {{SUBDOMAIN}}.{{DOMAIN}} -a {{APP_NAME}}` zeigt den
+     Fortschritt, bis die DNS-Prüfung durch ist.
+
+  Ohne Proxy davor ist das schon alles — DNS zeigt direkt auf Fly.io.
+  Wer zusätzlich einen Proxy/CDN vorschalten will (z. B. für DDoS-Schutz
+  oder ein getrennt deploytes Frontend), löst das über dessen eigene
+  Anleitung; dieses Modul macht dazu keine Vorgabe.
 
 ## Ergänzendes Muster: externer Dienst blockiert Rechenzentrums-IPs
 

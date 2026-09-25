@@ -1,6 +1,6 @@
 ---
 name: neues-projekt
-description: Wenn ein neues Projekt aus diesem Blueprint entstehen soll — fragt interaktiv ab, welche Technologie-Module (backend-java-onion, frontend-react-vite, persistence-postgres-flyway, deployment-fly-cloudflare, quality-gates) gebraucht werden, und spielt sie generalisiert in ein Zielverzeichnis ein.
+description: Wenn ein neues Projekt aus diesem Blueprint entstehen soll — fragt interaktiv ab, welche Technologie-Module (backend-java-onion, frontend-react-vite, persistence-postgres-flyway, deployment-fly, quality-gates) gebraucht werden, und spielt sie generalisiert in ein Zielverzeichnis ein.
 ---
 
 # Neues Projekt aus dem Blueprint
@@ -26,7 +26,7 @@ Repository/Verzeichnis.
      braucht (kein reines API-/Batch-Backend).
    - `persistence-postgres-flyway` — nur falls dauerhafte Persistenz
      gebraucht wird.
-   - `deployment-fly-cloudflare` — nur falls Fly.io tatsächlich das
+   - `deployment-fly` — nur falls Fly.io tatsächlich das
      Zielhosting ist. Bei Unsicherheit: `AskUserQuestion`, nicht raten —
      das Modul trifft eine Architekturannahme (genau eine Instanz), die
      nicht zu jedem Projekt passt (siehe README des Moduls).
@@ -55,7 +55,7 @@ Repository/Verzeichnis.
 3. **Reihenfolge einhalten** (siehe `docs/module-katalog.md`, Abschnitt
    „Empfohlene Reihenfolge"): `backend-java-onion` zuerst, `quality-gates`
    direkt danach, dann `frontend-react-vite`/`persistence-postgres-flyway`
-   in beliebiger Reihenfolge, `deployment-fly-cloudflare` danach,
+   in beliebiger Reihenfolge, `deployment-fly` danach,
    `dependabot-maintenance` ganz zuletzt.
 
 4. **Je Modul einspielen:**

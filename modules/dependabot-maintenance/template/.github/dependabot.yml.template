@@ -1,6 +1,6 @@
 # Versionsupdates fuer alle Oekosysteme im Repo. Der Commit-Typ "chore" ist
 # bewusst gewaehlt: er loest laut Semantic Release (siehe Modul
-# deployment-fly-cloudflare) keinen Release aus -- eine Abhaengigkeit zu
+# deployment-fly) keinen Release aus -- eine Abhaengigkeit zu
 # bumpen soll nicht automatisch deployen. github-actions bekommt "ci", weil
 # das die ueblichere Betreffzeile fuer Workflow-Aenderungen ist.
 #
@@ -10,7 +10,7 @@
 #
 # {{DEPENDABOT_ECOSYSTEMS}}: Diese Vorlage listet "gradle" und
 # "github-actions" -- die beiden, die aus backend-java-onion/
-# deployment-fly-cloudflare sicher vorhanden sind. Ist frontend-react-vite
+# deployment-fly sicher vorhanden sind. Ist frontend-react-vite
 # gewaehlt, den npm-Block fuer /frontend ergaenzen (siehe unten,
 # auskommentiert). Weitere Verzeichnisse mit eigenem package.json
 # (z. B. /e2e) bekommen denselben Block je einmal.
